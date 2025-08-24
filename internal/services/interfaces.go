@@ -18,6 +18,16 @@ type PythonManagerInterface interface {
 	Find(version string) (*types.PythonVersion, error)
 }
 
+// ProjectManagerInterface defines the contract for project management
+type ProjectManagerInterface interface {
+	GetProjectStatus() (*types.ProjectStatus, error)
+	InitProject(name string, options types.InitOptions) error
+	SyncProject() error
+	LockProject() error
+	GetDependencyTree() (*types.DependencyTree, error)
+	GetProjectDependencies() ([]types.ProjectDependency, error)
+}
+
 // UVInstallerInterface defines the contract for UV installation
 type UVInstallerInterface interface {
 	IsInstalled() (bool, string, error)

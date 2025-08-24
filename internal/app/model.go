@@ -11,6 +11,7 @@ type Model struct {
 	State           *types.AppState
 	UVInstaller     services.UVInstallerInterface
 	PythonManager   services.PythonManagerInterface
+	ProjectManager  services.ProjectManagerInterface
 	CommandExecutor services.CommandExecutorInterface
 }
 
@@ -32,6 +33,14 @@ func NewModel() *Model {
 			Selected:  0,
 			Loading:   false,
 		},
+		ProjectState: types.ProjectState{
+			Status:         nil,
+			Dependencies:   []types.ProjectDependency{},
+			DependencyTree: nil,
+			Selected:       0,
+			Loading:        false,
+			ShowTree:       false,
+		},
 		Messages: []string{},
 	}
 
@@ -39,6 +48,7 @@ func NewModel() *Model {
 		State:           state,
 		UVInstaller:     services.NewUVInstaller(executor),
 		PythonManager:   services.NewPythonManager(executor),
+		ProjectManager:  services.NewProjectManager(executor),
 		CommandExecutor: executor,
 	}
 }
@@ -104,6 +114,28 @@ func (m *Model) UpdatePythonVersions(available, installed []types.PythonVersion)
 
 	// Validate and fix selection after updating versions
 	m.ValidateAndFixSelection()
+}
+
+// UpdateProjectStatus updates the project status in the state
+func (m *Model) UpdateProjectStatus(status *types.ProjectStatus) {
+	m.State.ProjectState.Status = status
+	m.State.ProjectState.Loading = false
+}
+
+// UpdateProjectDependencies updates project dependencies and tree
+func (m *Model) UpdateProjectDependencies(deps []types.ProjectDependency, tree *types.DependencyTree) {
+	m.State.ProjectState.Dependencies = deps
+	m.State.ProjectState.DependencyTree = tree
+}
+
+// ToggleTreeView toggles between dependency list and tree view
+func (m *Model) ToggleTreeView() {
+	m.State.ProjectState.ShowTree = !m.State.ProjectState.ShowTree
+}
+
+// SetProjectLoading sets the project loading state
+func (m *Model) SetProjectLoading(loading bool) {
+	m.State.ProjectState.Loading = loading
 }
 
 // SetOperation sets the current operation status

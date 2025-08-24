@@ -40,3 +40,35 @@ type StatusUpdateMsg struct {
 	Message string
 	Type    string // "info", "warning", "error", "success"
 }
+
+// ProjectStatusLoadedMsg represents loaded project status
+type ProjectStatusLoadedMsg struct {
+	Status *types.ProjectStatus
+	Error  error
+}
+
+// ProjectDependenciesLoadedMsg represents loaded project dependencies
+type ProjectDependenciesLoadedMsg struct {
+	Dependencies []types.ProjectDependency
+	Tree         *types.DependencyTree
+	Error        error
+}
+
+// ProjectOperationMsg represents a project operation result
+type ProjectOperationMsg struct {
+	Operation string // "init", "sync", "lock", "tree"
+	Success   bool
+	Error     error
+}
+
+// ProjectInitRequestMsg represents a project initialization request
+type ProjectInitRequestMsg struct {
+	Name    string
+	Options types.InitOptions
+}
+
+// ToggleTreeViewMsg represents a request to toggle tree view
+type ToggleTreeViewMsg struct{}
+
+// RefreshProjectMsg represents a request to refresh project data
+type RefreshProjectMsg struct{}
