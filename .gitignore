@@ -1,3 +1,46 @@
-.air.toml
-bin
+# Binaries and build outputs
+bin/
+*.exe
+*.out
+*.test
+*.prof
+
+# Dependency directories (if not using Go modules)
+vendor/
+
+# Temporary and cache files
+*.tmp
+*.swp
+*.swo
+.DS_Store
+*.log
+
+# Go module cache (optional)
 go.sum
+
+# IDE and editor files
+.vscode/
+
+# Testing and coverage files
+coverage.txt
+coverage.out
+coverage.html
+TEST_COVERAGE.md
+profile.out
+*.cover
+.air.toml
+
+# Sensitive configuration files
+*.env
+config.json
+config.yaml
+*.key
+*.pem
+
+# Temporary directories
+/tmp/
+*.bak
+*.cache
+.CODEBASE.md
+.phase2.md
+Description.md

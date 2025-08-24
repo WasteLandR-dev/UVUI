@@ -12,7 +12,7 @@
 
 1. **Clone the repository:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/WasteLandR-dev/UVUI.git
    cd uvui
    ```
 
