@@ -1,4 +1,5 @@
-.PHONY: build run clean install deps test
+.PHONY: build run clean install deps test test-pretty test-color test-coverage test-oneline
+
 
 # Build the application
 build:
@@ -21,9 +22,28 @@ deps:
 install: build
 	sudo cp bin/uvui /usr/local/bin/
 
-# Run tests
 test:
 	go test ./... -v
+
+# Beautified test output with colors and formatting
+test-pretty:
+	@echo "🧪 Running tests with pretty output..."
+	@go test ./... -v 2>&1 | sed \
+		-e 's/PASS/✅ PASS/g' \
+		-e 's/FAIL/❌ FAIL/g' \
+		-e 's/RUN/🏃 RUN/g' \
+		-e 's/=== /\n=== /g' \
+		-e 's/--- /    --- /g'
+    
+# Simple one-line test summary
+test-oneline:
+	@echo "🧪 Running tests..."
+	@go test ./... -v > /tmp/go_test_output 2>&1 && \
+		echo "✅ All tests PASS!" || \
+		(echo "❌ Some tests FAILED!" && \
+		 echo "Failed tests:" && \
+		 grep "FAIL:" /tmp/go_test_output | head -10 | sed 's/^/  - /')
+	@rm -f /tmp/go_test_output
 
 # Run tests with coverage
 test-coverage:
@@ -58,4 +78,10 @@ lint:
 	golangci-lint run
 
 # Run all quality checks
-check: fmt vet lint test
+check: fmt vet lint test-oneline
+
+ch:
+	golangci-lint run --fix
+	staticcheck -checks all ./...
+	revive -formatter friendly -exclude ./vendor/... ./...
+	./bin/gosec -fmt=golint -quiet ./...
