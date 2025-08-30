@@ -1,3 +1,4 @@
+// Package app provides the core application logic.
 package app
 
 import (
@@ -123,13 +124,13 @@ func (m *Model) handleTabNavigation(direction int) (tea.Model, tea.Cmd) {
 	}
 
 	// Load Python versions when entering Python panel
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.PythonVersions.Loading {
 		m.State.PythonVersions.Loading = true
 		return m, LoadPythonVersions(m.PythonManager)
 	}
 
 	// Load project status when entering Project panel
-	if m.State.ActivePanel == types.ProjectPanel && m.State.UVStatus.Installed && !m.State.ProjectState.Loading {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.ProjectState.Loading {
 		m.State.ProjectState.Loading = true
 		return m, LoadProjectStatus(m.ProjectManager)
 	}
@@ -155,7 +156,7 @@ func (m *Model) handleVerticalNavigation(direction int) (tea.Model, tea.Cmd) {
 
 // handleEnterKey handles enter key press
 func (m *Model) handleEnterKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && !selectedVersion.Installed {
 			m.SetOperation("install", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Installing Python %s...", selectedVersion.Version))
@@ -167,7 +168,7 @@ func (m *Model) handleEnterKey() (tea.Model, tea.Cmd) {
 
 // handleDeleteKey handles delete key press
 func (m *Model) handleDeleteKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && selectedVersion.Installed && !selectedVersion.Current {
 			m.SetOperation("uninstall", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Uninstalling Python %s...", selectedVersion.Version))
@@ -179,7 +180,7 @@ func (m *Model) handleDeleteKey() (tea.Model, tea.Cmd) {
 
 // handlePinKey handles pin key press
 func (m *Model) handlePinKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && selectedVersion.Installed {
 			m.SetOperation("pin", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Pinning Python %s...", selectedVersion.Version))
@@ -193,20 +194,20 @@ func (m *Model) handlePinKey() (tea.Model, tea.Cmd) {
 func (m *Model) handleInstallRefresh() (tea.Model, tea.Cmd) {
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
-		if !m.State.UVStatus.Installed && !m.State.Installing {
+		if !m.State.Installed && !m.State.Installing {
 			m.State.Installing = true
 			m.AddMessage("Installing UV...")
 			return m, InstallUV(m.UVInstaller)
 		}
 	case types.PythonPanel:
-		if m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+		if m.State.Installed && !m.State.PythonVersions.Loading {
 			m.State.PythonVersions.Loading = true
 			m.AddMessage("Refreshing Python versions...")
 			return m, LoadPythonVersions(m.PythonManager)
 		}
 	case types.ProjectPanel:
 		// Initialize new project
-		if m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+		if m.State.Installed && !m.State.Operation.InProgress {
 			if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
 				m.SetOperation("init", "", true)
 				m.AddMessage("Initializing new project...")
@@ -224,13 +225,13 @@ func (m *Model) handleRefresh() (tea.Model, tea.Cmd) {
 		m.AddMessage("Refreshing UV status...")
 		return m, CheckUVStatus(m.UVInstaller)
 	case types.PythonPanel:
-		if m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+		if m.State.Installed && !m.State.PythonVersions.Loading {
 			m.State.PythonVersions.Loading = true
 			m.AddMessage("Refreshing Python versions...")
 			return m, LoadPythonVersions(m.PythonManager)
 		}
 	case types.ProjectPanel:
-		if m.State.UVStatus.Installed && !m.State.ProjectState.Loading {
+		if m.State.Installed && !m.State.ProjectState.Loading {
 			m.State.ProjectState.Loading = true
 			m.AddMessage("Refreshing project status...")
 			return m, LoadProjectStatus(m.ProjectManager)
@@ -266,13 +267,13 @@ func (m *Model) getCurrentPanelHelp() string {
 func (m *Model) handleUVInstalledMsg(msg ui.UVInstalledMsg) (tea.Model, tea.Cmd) {
 	m.State.Installing = false
 	if msg.Success {
-		m.State.UVStatus.Installed = true
-		m.State.UVStatus.Version = msg.Version
+		m.State.Installed = true
+		m.State.Version = msg.Version
 		m.AddMessage("UV installation completed successfully!")
 	} else if msg.Error != nil {
 		m.AddMessage(fmt.Sprintf("UV installation failed: %v", msg.Error))
 	} else {
-		m.State.UVStatus.Installed = false
+		m.State.Installed = false
 		m.AddMessage("UV is not installed")
 	}
 	return m, nil
@@ -293,16 +294,15 @@ func (m *Model) handlePythonVersionsLoadedMsg(msg ui.PythonVersionsLoadedMsg) (t
 func (m *Model) handlePythonOperationMsg(msg ui.PythonOperationMsg) (tea.Model, tea.Cmd) {
 	m.CompleteOperation(msg.Success, msg.Error)
 
-	if msg.Success {
-		m.AddMessage(fmt.Sprintf("Successfully %sed Python %s", msg.Operation, msg.Target))
-		// Reload Python versions after successful operation
-		m.State.PythonVersions.Loading = true
-		return m, LoadPythonVersions(m.PythonManager)
-	} else {
+	if !msg.Success {
 		m.AddMessage(fmt.Sprintf("Failed to %s Python %s: %v", msg.Operation, msg.Target, msg.Error))
+		return m, nil
 	}
 
-	return m, nil
+	m.AddMessage(fmt.Sprintf("Successfully %sed Python %s", msg.Operation, msg.Target))
+	// Reload Python versions after successful operation
+	m.State.PythonVersions.Loading = true
+	return m, LoadPythonVersions(m.PythonManager)
 }
 
 // View renders the application UI
@@ -363,7 +363,8 @@ func (m *Model) renderActivePanel() string {
 	var content string
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
-		content = panels.RenderStatusPanel(m.State, m.UVInstaller)
+		installCmd, _ := m.UVInstaller.GetInstallCommand()
+		content = panels.RenderStatusPanel(m.State, installCmd)
 	case types.PythonPanel:
 		style = ui.ActivePanelStyle
 		content = panels.RenderPythonPanel(m.State)
@@ -387,7 +388,7 @@ func (m *Model) renderStatusBar() string {
 		lipgloss.JoinHorizontal(
 			lipgloss.Left,
 			osInfo,
-			strings.Repeat(" ", max(0, m.State.Width-len(osInfo)-len(panelInfo)-4)),
+			strings.Repeat(" ", maxInt(0, m.State.Width-len(osInfo)-len(panelInfo)-4)),
 			panelInfo,
 		),
 	)
@@ -395,7 +396,7 @@ func (m *Model) renderStatusBar() string {
 
 // handleSyncKey handles sync key press
 func (m *Model) handleSyncKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.ProjectPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if m.State.ProjectState.Status != nil && m.State.ProjectState.Status.IsProject {
 			m.SetOperation("sync", "", true)
 			m.AddMessage("Syncing project dependencies...")
@@ -407,18 +408,18 @@ func (m *Model) handleSyncKey() (tea.Model, tea.Cmd) {
 
 // handleLockOrLibKey handles lock/lib key press
 func (m *Model) handleLockOrLibKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.ProjectPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if m.State.ProjectState.Status != nil && m.State.ProjectState.Status.IsProject {
 			// Lock dependencies if in project
 			m.SetOperation("lock", "", true)
 			m.AddMessage("Locking project dependencies...")
 			return m, LockProject(m.ProjectManager)
-		} else {
-			// Initialize as library if not in project
-			m.SetOperation("init", "library", true)
-			m.AddMessage("Initializing library project...")
-			return m, InitProject(m.ProjectManager, "", types.InitOptions{Lib: true})
 		}
+		// Initialize as library if not in project
+		m.SetOperation("init", "library", true)
+		m.AddMessage("Initializing library project...")
+		return m, InitProject(m.ProjectManager, "", types.InitOptions{Lib: true})
+
 	}
 	return m, nil
 }
@@ -436,7 +437,7 @@ func (m *Model) handleToggleKey() (tea.Model, tea.Cmd) {
 
 // handleAppKey handles app key press
 func (m *Model) handleAppKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.ProjectPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
 			m.SetOperation("init", "app", true)
 			m.AddMessage("Initializing app project...")
@@ -448,7 +449,7 @@ func (m *Model) handleAppKey() (tea.Model, tea.Cmd) {
 
 // handleNewProjectKey handles new project key press
 func (m *Model) handleNewProjectKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.ProjectPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
 			// For now, initialize with current directory name
 			// In the future, you could implement an input dialog
@@ -491,23 +492,22 @@ func (m *Model) handleProjectDependenciesLoadedMsg(msg ui.ProjectDependenciesLoa
 func (m *Model) handleProjectOperationMsg(msg ui.ProjectOperationMsg) (tea.Model, tea.Cmd) {
 	m.CompleteOperation(msg.Success, msg.Error)
 
-	if msg.Success {
-		m.AddMessage(fmt.Sprintf("Successfully completed %s operation", msg.Operation))
-		// Reload project status and dependencies after successful operations
-		m.State.ProjectState.Loading = true
-		return m, tea.Batch(
-			LoadProjectStatus(m.ProjectManager),
-			LoadProjectDependencies(m.ProjectManager),
-		)
-	} else {
+	if !msg.Success {
 		m.AddMessage(fmt.Sprintf("Failed to %s: %v", msg.Operation, msg.Error))
+		return m, nil
 	}
 
-	return m, nil
+	m.AddMessage(fmt.Sprintf("Successfully completed %s operation", msg.Operation))
+	// Reload project status and dependencies after successful operations
+	m.State.ProjectState.Loading = true
+	return m, tea.Batch(
+		LoadProjectStatus(m.ProjectManager),
+		LoadProjectDependencies(m.ProjectManager),
+	)
 }
 
 // Helper functions
-func max(a, b int) int {
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}

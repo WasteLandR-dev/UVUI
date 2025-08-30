@@ -1,4 +1,5 @@
-package utils
+// Package version provides utility functions.
+package version
 
 import (
 	"strconv"

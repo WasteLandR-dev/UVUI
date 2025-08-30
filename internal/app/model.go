@@ -1,3 +1,4 @@
+// Package app provides the core application logic.
 package app
 
 import (
@@ -8,7 +9,7 @@ import (
 
 // Model represents the application state and dependencies
 type Model struct {
-	State           *types.AppState
+	State           *panels.AppState
 	UVInstaller     services.UVInstallerInterface
 	PythonManager   services.PythonManagerInterface
 	ProjectManager  services.ProjectManagerInterface
@@ -19,7 +20,7 @@ type Model struct {
 func NewModel() *Model {
 	executor := services.NewCommandExecutor()
 
-	state := &types.AppState{
+	state := &panels.AppState{
 		ActivePanel: types.StatusPanel,
 		Panels: []types.Panel{
 			types.StatusPanel,
@@ -27,13 +28,13 @@ func NewModel() *Model {
 			types.ProjectPanel,
 			types.EnvironmentPanel,
 		},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: panels.PythonVersions{
 			Available: []types.PythonVersion{},
 			Installed: []types.PythonVersion{},
 			Selected:  0,
 			Loading:   false,
 		},
-		ProjectState: types.ProjectState{
+		ProjectState: panels.ProjectState{
 			Status:         nil,
 			Dependencies:   []types.ProjectDependency{},
 			DependencyTree: nil,

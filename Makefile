@@ -1,4 +1,4 @@
-.PHONY: build run clean install deps test test-pretty test-color test-coverage test-oneline
+.PHONY: build run clean install deps test test-pretty test-color test-coverage test-oneline ch
 
 
 # Build the application

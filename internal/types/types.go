@@ -1,21 +1,19 @@
+// Package types provides shared data types for the application.
 package types
 
 // Panel represents a UI panel
 type Panel int
 
 const (
+	// StatusPanel is the status panel.
 	StatusPanel Panel = iota
+	// PythonPanel is the python panel.
 	PythonPanel
+	// ProjectPanel is the project panel.
 	ProjectPanel
+	// EnvironmentPanel is the environment panel.
 	EnvironmentPanel
 )
-
-// UVStatus represents the status of UV installation
-type UVStatus struct {
-	Installed bool
-	Version   string
-	Path      string
-}
 
 // PythonVersion represents a Python version
 type PythonVersion struct {
@@ -23,37 +21,6 @@ type PythonVersion struct {
 	Installed bool
 	Current   bool
 	Path      string
-}
-
-// PythonVersions represents the state of Python versions
-type PythonVersions struct {
-	Available []PythonVersion
-	Installed []PythonVersion
-	Selected  int
-	Loading   bool
-}
-
-// OperationStatus represents the status of an ongoing operation
-type OperationStatus struct {
-	InProgress bool
-	Operation  string
-	Target     string
-	Success    bool
-	Error      error
-}
-
-// AppState represents the overall application state
-type AppState struct {
-	ActivePanel    Panel
-	Panels         []Panel
-	Width          int
-	Height         int
-	UVStatus       UVStatus
-	PythonVersions PythonVersions
-	Installing     bool
-	Messages       []string
-	Operation      OperationStatus
-	ProjectState   ProjectState
 }
 
 // ProjectStatus represents the current project status
@@ -96,12 +63,18 @@ type DependencyTree struct {
 	Dependencies []TreeNode
 }
 
-// ProjectState represents the project panel state
-type ProjectState struct {
-	Status         *ProjectStatus
-	Dependencies   []ProjectDependency
-	DependencyTree *DependencyTree
-	Selected       int
-	Loading        bool
-	ShowTree       bool
+// UVStatus represents the status of UV installation
+type UVStatus struct {
+	Installed bool
+	Version   string
+	Path      string
+}
+
+// OperationStatus represents the status of an ongoing operation
+type OperationStatus struct {
+	InProgress bool
+	Operation  string
+	Target     string
+	Success    bool
+	Error      error
 }

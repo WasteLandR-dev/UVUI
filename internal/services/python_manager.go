@@ -1,3 +1,4 @@
+// Package services provides services for the application.
 package services
 
 import (
@@ -7,7 +8,7 @@ import (
 	"strings"
 
 	"uvui/internal/types"
-	"uvui/pkg/utils"
+	"uvui/pkg/version"
 )
 
 // PythonManager implements Python version management functionality
@@ -119,7 +120,7 @@ func (p *PythonManager) parseAvailableVersions(output string) []types.PythonVers
 
 	// Sort versions in descending order
 	sort.Slice(versions, func(i, j int) bool {
-		return utils.CompareVersions(versions[i].Version, versions[j].Version) > 0
+		return version.CompareVersions(versions[i].Version, versions[j].Version) > 0
 	})
 
 	return versions
@@ -130,6 +131,8 @@ func (p *PythonManager) parseInstalledVersions(output string) []types.PythonVers
 	var versions []types.PythonVersion
 	lines := strings.Split(output, "\n")
 
+	versionRegex := regexp.MustCompile(`(\d+\.\d+(?:\.\d+)?(?:[a-z]+\d+)?)`)
+
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "#") {
@@ -139,8 +142,9 @@ func (p *PythonManager) parseInstalledVersions(output string) []types.PythonVers
 		// Parse installed versions with paths
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
+			ver := versionRegex.FindString(parts[0])
 			versions = append(versions, types.PythonVersion{
-				Version:   parts[0],
+				Version:   ver,
 				Installed: true,
 				Current:   strings.Contains(line, "*") || strings.Contains(line, "default"),
 				Path:      strings.Join(parts[1:], " "),

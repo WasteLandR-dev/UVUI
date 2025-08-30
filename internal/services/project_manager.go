@@ -1,3 +1,4 @@
+// Package services provides services for the application.
 package services
 
 import (
@@ -31,7 +32,7 @@ func (p *ProjectManager) GetProjectStatus() (*types.ProjectStatus, error) {
 		return status, err
 	}
 
-	pyprojectPath := filepath.Join(currentDir, "pyproject.toml")
+	pyprojectPath := "pyproject.toml"
 	if _, err := os.Stat(pyprojectPath); os.IsNotExist(err) {
 		status.Path = currentDir
 		return status, nil
@@ -46,20 +47,20 @@ func (p *ProjectManager) GetProjectStatus() (*types.ProjectStatus, error) {
 	// Try to get more project info
 	if p.executor.IsUVAvailable() {
 		// Check if project is synced
-		lockFilePath := filepath.Join(currentDir, "uv.lock")
+		lockFilePath := "uv.lock"
 		if _, err := os.Stat(lockFilePath); err == nil {
 			status.HasLockFile = true
 			status.LockFile = lockFilePath
 		}
 
 		// Get Python version if pinned
-		pythonVersionPath := filepath.Join(currentDir, ".python-version")
+		pythonVersionPath := ".python-version"
 		if content, err := os.ReadFile(pythonVersionPath); err == nil {
 			status.PythonVersion = strings.TrimSpace(string(content))
 		}
 
 		// Check virtual environment
-		venvPath := filepath.Join(currentDir, ".venv")
+		venvPath := ".venv"
 		if _, err := os.Stat(venvPath); err == nil {
 			status.HasVirtualEnv = true
 			status.VenvPath = venvPath

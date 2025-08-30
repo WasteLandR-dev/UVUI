@@ -2,14 +2,13 @@ package panels
 
 import (
 	"testing"
+	"uvui/internal/types"
 
 	"github.com/stretchr/testify/assert"
-
-	"uvui/internal/types"
 )
 
 func TestRenderPythonPanel_UVNotInstalled(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: false},
 	}
 
@@ -20,9 +19,9 @@ func TestRenderPythonPanel_UVNotInstalled(t *testing.T) {
 }
 
 func TestRenderPythonPanel_Loading(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Loading: true,
 		},
 	}
@@ -34,9 +33,9 @@ func TestRenderPythonPanel_Loading(t *testing.T) {
 }
 
 func TestRenderPythonPanel_NoVersions(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{},
 			Installed: []types.PythonVersion{},
 		},
@@ -50,9 +49,9 @@ func TestRenderPythonPanel_NoVersions(t *testing.T) {
 }
 
 func TestRenderPythonPanel_WithVersions(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{
 				{Version: "3.12.0", Installed: false},
 				{Version: "3.11.0", Installed: false},
@@ -71,13 +70,12 @@ func TestRenderPythonPanel_WithVersions(t *testing.T) {
 	assert.Contains(t, content, "3.12.0")
 	assert.Contains(t, content, "3.11.0")
 	assert.Contains(t, content, "(current)")
-	assert.Contains(t, content, "(current)")
 }
 
 func TestRenderPythonPanel_OperationInProgress(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{
 				{Version: "3.12.0", Installed: false},
 			},
@@ -238,7 +236,7 @@ func TestGetPythonPanelHelp(t *testing.T) {
 
 	assert.Contains(t, help, "↑↓: Navigate")
 	assert.Contains(t, help, "Enter: Install")
-	assert.Contains(t, help, "d: Delete")
+	assert.Contains(t, help, "d/Del: Delete")
 	assert.Contains(t, help, "p: Pin")
 	assert.Contains(t, help, "i: Refresh")
 }

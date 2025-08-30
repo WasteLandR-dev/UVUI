@@ -1,3 +1,4 @@
+// Package panels provides UI panels for the application.
 package panels
 
 import (
@@ -14,13 +15,21 @@ import (
 	"golang.org/x/text/language"
 )
 
+// PythonVersions represents the state of Python versions
+type PythonVersions struct {
+	Available []types.PythonVersion
+	Installed []types.PythonVersion
+	Selected  int
+	Loading   bool
+}
+
 // RenderPythonPanel renders the Python management panel
-func RenderPythonPanel(state *types.AppState) string {
+func RenderPythonPanel(state *AppState) string {
 	var content strings.Builder
 
 	content.WriteString("Python Version Management\n\n")
 
-	if !state.UVStatus.Installed {
+	if !state.Installed {
 		content.WriteString(ui.ErrorStyle.Render("UV must be installed first to manage Python versions."))
 		return content.String()
 	}
@@ -57,6 +66,10 @@ func RenderPythonPanel(state *types.AppState) string {
 			cases.Title(language.English).String(state.Operation.Operation),
 			state.Operation.Target)))
 	}
+
+	// Show help bar
+	content.WriteString("\n\n---\n")
+	content.WriteString(ui.HelpStyle.Render(GetPythonPanelHelp()))
 
 	return content.String()
 }
@@ -170,5 +183,5 @@ func parseVersionPart(part string) int {
 
 // GetPythonPanelHelp returns help text for the Python panel
 func GetPythonPanelHelp() string {
-	return "↑↓: Navigate | Enter: Install | d: Delete | p: Pin | i: Refresh"
+	return "↑↓: Navigate | Enter: Install | d/Del: Delete | p: Pin | i: Refresh"
 }

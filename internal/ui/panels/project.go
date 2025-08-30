@@ -1,3 +1,4 @@
+// Package panels provides UI panels for the application.
 package panels
 
 import (
@@ -8,14 +9,24 @@ import (
 	"uvui/internal/ui"
 )
 
+// ProjectState represents the project panel state
+type ProjectState struct {
+	Status         *types.ProjectStatus
+	Dependencies   []types.ProjectDependency
+	DependencyTree *types.DependencyTree
+	Selected       int
+	Loading        bool
+	ShowTree       bool
+}
+
 // RenderProjectPanel renders the project management panel
-func RenderProjectPanel(state *types.AppState) string {
+func RenderProjectPanel(state *AppState) string {
 	var content strings.Builder
 
 	content.WriteString(ui.TitleStyle.Render("📦 Project Management"))
 	content.WriteString("\n\n")
 
-	if !state.UVStatus.Installed {
+	if !state.Installed {
 		content.WriteString(ui.ErrorStyle.Render("UV must be installed first to manage projects."))
 		return content.String()
 	}
@@ -95,7 +106,7 @@ func renderProjectStatus(status *types.ProjectStatus) string {
 }
 
 // renderProjectOperations renders available project operations
-func renderProjectOperations(state *types.AppState) string {
+func renderProjectOperations(_ *AppState) string {
 	var content strings.Builder
 
 	content.WriteString(ui.CurrentVersionStyle.Render("Available Operations"))

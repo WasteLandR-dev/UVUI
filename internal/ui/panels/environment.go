@@ -1,15 +1,15 @@
+// Package panels provides UI panels for the application.
 package panels
 
 import (
-	"uvui/internal/types"
 	"uvui/internal/ui"
 )
 
 // RenderEnvironmentPanel renders the environment management panel
-func RenderEnvironmentPanel(state *types.AppState) string {
+func RenderEnvironmentPanel(state *AppState) string {
 	content := "Environment Management\n\n"
 
-	if !state.UVStatus.Installed {
+	if !state.Installed {
 		content += ui.ErrorStyle.Render("UV must be installed first to manage environments.")
 		return content
 	}

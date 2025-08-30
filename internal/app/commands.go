@@ -1,3 +1,4 @@
+// Package app provides the core application logic.
 package app
 
 import (

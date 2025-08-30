@@ -1,11 +1,10 @@
+// Package panels provides UI panels for the application.
 package panels
 
 import (
 	"fmt"
 	"strings"
 
-	"uvui/internal/services"
-	"uvui/internal/types"
 	"uvui/internal/ui"
 
 	"golang.org/x/text/cases"
@@ -13,30 +12,29 @@ import (
 )
 
 // RenderStatusPanel renders the status panel content
-func RenderStatusPanel(state *types.AppState, uvInstaller services.UVInstallerInterface) string {
+func RenderStatusPanel(state *AppState, installCmd string) string {
 	var content strings.Builder
 
 	content.WriteString("UV Installation Status:\n\n")
 
 	if state.Installing {
 		content.WriteString(ui.LoadingStyle.Render("⏳ Installing UV...") + "\n")
-	} else if state.UVStatus.Installed {
+	} else if state.Installed {
 		content.WriteString(ui.SuccessStyle.Render("✅ UV is installed") + "\n")
-		if state.UVStatus.Version != "" {
-			content.WriteString(fmt.Sprintf("   Version: %s\n", state.UVStatus.Version))
+		if state.Version != "" {
+			content.WriteString(fmt.Sprintf("   Version: %s\n", state.Version))
 		}
-		if state.UVStatus.Path != "" {
-			content.WriteString(fmt.Sprintf("   Path: %s\n", state.UVStatus.Path))
+		if state.Path != "" {
+			content.WriteString(fmt.Sprintf("   Path: %s\n", state.Path))
 		}
 	} else {
 		content.WriteString(ui.ErrorStyle.Render("❌ UV is not installed") + "\n")
 		content.WriteString("   Press 'i' to install UV\n\n")
 
 		// Show install command
-		cmd, err := uvInstaller.GetInstallCommand()
-		if err == nil {
+		if installCmd != "" {
 			content.WriteString("Install command:\n")
-			content.WriteString(fmt.Sprintf("   %s\n", cmd))
+			content.WriteString(fmt.Sprintf("   %s\n", installCmd))
 		}
 	}
 
