@@ -2,6 +2,9 @@ package app
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -13,6 +16,30 @@ import (
 
 // Simple test helpers
 
+// ensure tests run with repo root as working directory so keybindings.json is found
+func TestMain(m *testing.M) {
+	// start at this file's directory and walk up to find repo root marker
+	_, thisFile, _, ok := runtime.Caller(0)
+	if ok {
+		dir := filepath.Dir(thisFile)
+		for i := 0; i < 6; i++ {
+			// look for common repo root markers or the keybindings file itself
+			if fileExists(filepath.Join(dir, "keybindings.json")) ||
+				fileExists(filepath.Join(dir, "go.mod")) ||
+				fileExists(filepath.Join(dir, ".git")) {
+				_ = os.Chdir(dir)
+				break
+			}
+			dir = filepath.Dir(dir)
+		}
+	}
+	os.Exit(m.Run())
+}
+
+func fileExists(p string) bool {
+	_, err := os.Stat(p)
+	return err == nil
+}
 func TestNewModel(t *testing.T) {
 	model := NewModel()
 

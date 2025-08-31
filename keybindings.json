@@ -1,0 +1,20 @@
+{
+  "keybindings": {
+    "quit": ["ctrl+c", "q"],
+    "next_panel": ["tab"],
+    "prev_panel": ["shift+tab"],
+    "navigation_up": ["up", "k"],
+    "navigation_down": ["down", "j"],
+    "install": ["enter"],
+    "delete": ["d", "delete"],
+    "pin": ["p"],
+    "refresh": ["r"],
+    "help": ["?"],
+    "sync": ["s"],
+    "lock": ["l"],
+    "toggle_view": ["t"],
+    "init_app": ["a"],
+    "init_new": ["n"],
+    "install_refresh": ["i"]
+  }
+}

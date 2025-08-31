@@ -10,6 +10,7 @@ import (
 // Model represents the application state and dependencies
 type Model struct {
 	State           *panels.AppState
+	Config          *Config
 	UVInstaller     services.UVInstallerInterface
 	PythonManager   services.PythonManagerInterface
 	ProjectManager  services.ProjectManagerInterface
@@ -18,6 +19,11 @@ type Model struct {
 
 // NewModel creates a new application model
 func NewModel() *Model {
+	config, err := LoadConfig("keybindings.json")
+	if err != nil {
+		panic(err)
+	}
+
 	executor := services.NewCommandExecutor()
 
 	state := &panels.AppState{
@@ -47,6 +53,7 @@ func NewModel() *Model {
 
 	return &Model{
 		State:           state,
+		Config:          config,
 		UVInstaller:     services.NewUVInstaller(executor),
 		PythonManager:   services.NewPythonManager(executor),
 		ProjectManager:  services.NewProjectManager(executor),

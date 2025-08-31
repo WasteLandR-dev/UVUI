@@ -55,62 +55,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleKeyPress handles keyboard input
-func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "ctrl+c", "q":
-		return m, tea.Quit
-
-	case "tab":
-		return m.handleTabNavigation(1)
-
-	case "shift+tab":
-		return m.handleTabNavigation(-1)
-
-	case "up", "k":
-		return m.handleVerticalNavigation(-1)
-
-	case "down", "j":
-		return m.handleVerticalNavigation(1)
-
-	case "enter":
-		return m.handleEnterKey()
-
-	case "d", "delete":
-		return m.handleDeleteKey()
-
-	case "p":
-		return m.handlePinKey()
-
-	case "i":
-		return m.handleInstallRefresh()
-
-	case "r":
-		return m.handleRefresh()
-
-	case "?":
-		return m.handleHelp()
-
-	case "s":
-		return m.handleSyncKey()
-
-	case "l":
-		return m.handleLockOrLibKey()
-
-	case "t":
-		return m.handleToggleKey()
-
-	case "a":
-		return m.handleAppKey()
-
-	case "n":
-		return m.handleNewProjectKey()
-
-	}
-
-	return m, nil
-}
-
 // handleTabNavigation handles tab and shift+tab navigation
 func (m *Model) handleTabNavigation(direction int) (tea.Model, tea.Cmd) {
 	if direction > 0 {
