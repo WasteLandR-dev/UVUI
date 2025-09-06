@@ -3,9 +3,11 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
@@ -13,6 +15,25 @@ import (
 	"uvui/internal/ui"
 	"uvui/internal/ui/panels"
 )
+
+type InputMode int
+
+const (
+	InputModeNone InputMode = iota
+	InputModeProjectName
+	InputModePythonVersion
+)
+
+func getDirection(key string) int {
+	switch key {
+	case "up":
+		return -1
+	case "down":
+		return 1
+	default:
+		return 0
+	}
+}
 
 // Init initializes the application
 func (m *Model) Init() tea.Cmd {
@@ -31,6 +52,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		if msg.String() == "enter" && m.InputMode == InputModePythonVersion {
+			return m.handleEnterKey()
+		} else if m.InputMode == InputModePythonVersion && (msg.String() == "up" || msg.String() == "down") {
+			return m.handleVerticalNavigation(getDirection(msg.String()))
+		} else if m.InputMode != InputModeNone {
+			return m.handleTextInput(msg)
+		}
 		return m.handleKeyPress(msg)
 
 	case ui.UVInstalledMsg:
@@ -53,6 +81,25 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, nil
+}
+
+func (m *Model) handleTextInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
+	if msg.Type == tea.KeyEnter {
+		projectName := m.TextInput.Value()
+		m.State.ProjectState.Name = projectName
+		m.InputMode = InputModeNone // Reset input mode
+		m.TextInput.Reset()
+
+		m.SetOperation("init", projectName, true)
+		m.AddMessage(fmt.Sprintf("Initializing new project '%s'...", projectName))
+		options := types.InitOptions{} // No python version
+		return m, InitProject(m.ProjectManager, projectName, options)
+	}
+
+	m.TextInput, cmd = m.TextInput.Update(msg)
+	return m, cmd
 }
 
 // handleTabNavigation handles tab and shift+tab navigation
@@ -84,7 +131,7 @@ func (m *Model) handleTabNavigation(direction int) (tea.Model, tea.Cmd) {
 
 // handleVerticalNavigation handles up/down arrow navigation within panels
 func (m *Model) handleVerticalNavigation(direction int) (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel {
+	if m.State.ActivePanel == types.PythonPanel || m.InputMode == InputModePythonVersion {
 		// Merge available and installed for display order
 		allVersions := panels.MergePythonVersions(m.State.PythonVersions.Available, m.State.PythonVersions.Installed)
 		if len(allVersions) > 0 {
@@ -100,7 +147,15 @@ func (m *Model) handleVerticalNavigation(direction int) (tea.Model, tea.Cmd) {
 
 // handleEnterKey handles enter key press
 func (m *Model) handleEnterKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
+	if m.InputMode == InputModePythonVersion {
+		selectedVersion := m.GetSelectedPythonVersion()
+		if selectedVersion != nil {
+			m.SetOperation("init", m.State.ProjectState.Name, true)
+			m.AddMessage(fmt.Sprintf("Initializing new project '%s' with python %s...", m.State.ProjectState.Name, selectedVersion.Version))
+			options := types.InitOptions{PythonVersion: selectedVersion.Version}
+			return m, InitProject(m.ProjectManager, m.State.ProjectState.Name, options)
+		}
+	} else if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && !selectedVersion.Installed {
 			m.SetOperation("install", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Installing Python %s...", selectedVersion.Version))
@@ -262,7 +317,15 @@ func (m *Model) View() string {
 	tabs := m.renderTabs()
 
 	// Main content based on active panel
-	content := m.renderActivePanel()
+	var content string
+	switch m.InputMode {
+	case InputModeProjectName:
+		content = m.TextInput.View()
+	case InputModePythonVersion:
+		content = panels.RenderPythonPanel(m.State)
+	default:
+		content = m.renderActivePanel()
+	}
 
 	// Status bar
 	statusBar := m.renderStatusBar()
@@ -395,11 +458,9 @@ func (m *Model) handleAppKey() (tea.Model, tea.Cmd) {
 func (m *Model) handleNewProjectKey() (tea.Model, tea.Cmd) {
 	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
-			// For now, initialize with current directory name
-			// In the future, you could implement an input dialog
-			m.SetOperation("init", "new", true)
-			m.AddMessage("Initializing new project...")
-			return m, InitProject(m.ProjectManager, "", types.InitOptions{})
+			m.InputMode = InputModeProjectName
+			m.AddMessage("Please enter the project name:")
+			return m, textinput.Blink
 		}
 	}
 	return m, nil
@@ -439,6 +500,15 @@ func (m *Model) handleProjectOperationMsg(msg ui.ProjectOperationMsg) (tea.Model
 	if !msg.Success {
 		m.AddMessage(fmt.Sprintf("Failed to %s: %v", msg.Operation, msg.Error))
 		return m, nil
+	}
+
+	if msg.Operation == "init" && msg.ProjectDir != "" && msg.ProjectDir != "." {
+		err := os.Chdir(msg.ProjectDir)
+		if err != nil {
+			m.AddMessage(fmt.Sprintf("Failed to change directory to %s: %v", msg.ProjectDir, err))
+			return m, nil
+		}
+		m.AddMessage(fmt.Sprintf("Changed directory to %s", msg.ProjectDir))
 	}
 
 	m.AddMessage(fmt.Sprintf("Successfully completed %s operation", msg.Operation))

@@ -57,9 +57,10 @@ type ProjectDependenciesLoadedMsg struct {
 
 // ProjectOperationMsg represents a project operation result
 type ProjectOperationMsg struct {
-	Operation string // "init", "sync", "lock", "tree"
-	Success   bool
-	Error     error
+	Operation  string // "init", "sync", "lock", "tree"
+	Success    bool
+	Error      error
+	ProjectDir string
 }
 
 // ProjectInitRequestMsg represents a project initialization request

@@ -26,17 +26,24 @@ type Keybindings struct {
 	InitApp        []string `json:"init_app"`
 	InitNew        []string `json:"init_new"`
 	InstallRefresh []string `json:"install_refresh"`
+	InitConfig     []string `json:"init_config"`
 }
 
 // Config holds the application configuration
 type Config struct {
-	Keybindings Keybindings `json:"keybindings"`
+	Keybindings         Keybindings `json:"keybindings"`
+	KeybindingsNotFound bool        `json:"-"` // This field is not serialized
 }
 
 // LoadConfig loads the configuration from the given path
 func LoadConfig(path string) (*Config, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			config := DefaultConfig()
+			config.KeybindingsNotFound = true
+			return config, nil
+		}
 		return nil, err
 	}
 
@@ -47,6 +54,42 @@ func LoadConfig(path string) (*Config, error) {
 	}
 
 	return &config, nil
+}
+
+// InitConfig creates a new keybindings.json file with default values
+func InitConfig(path string) error {
+	config := DefaultConfig()
+	file, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, file, 0644)
+}
+
+// DefaultConfig returns the default configuration
+func DefaultConfig() *Config {
+	return &Config{
+		Keybindings: Keybindings{
+			Quit:           []string{"q", "ctrl+c"},
+			NextPanel:      []string{"tab"},
+			PrevPanel:      []string{"shift+tab"},
+			NavUp:          []string{"up", "k"},
+			NavDown:        []string{"down", "j"},
+			Install:        []string{"enter"},
+			Delete:         []string{"d"},
+			Pin:            []string{"p"},
+			Refresh:        []string{"r"},
+			Help:           []string{"h"},
+			Sync:           []string{"s"},
+			Lock:           []string{"l"},
+			ToggleView:     []string{"t"},
+			InitApp:        []string{"a"},
+			InitNew:        []string{"n"},
+			InstallRefresh: []string{"i"},
+			InitConfig:     []string{"c"},
+		},
+	}
 }
 
 // handleKeyPress handles keyboard input
@@ -84,6 +127,8 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m.handleNewProjectKey()
 	case contains(m.Config.Keybindings.InstallRefresh, msg.String()):
 		return m.handleInstallRefresh()
+	case contains(m.Config.Keybindings.InitConfig, msg.String()):
+		return m.handleInitConfig()
 	}
 
 	return m, nil

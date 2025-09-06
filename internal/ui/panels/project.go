@@ -11,6 +11,7 @@ import (
 
 // ProjectState represents the project panel state
 type ProjectState struct {
+	Name           string
 	Status         *types.ProjectStatus
 	Dependencies   []types.ProjectDependency
 	DependencyTree *types.DependencyTree

@@ -44,11 +44,12 @@ func LoadProjectDependencies(projectManager services.ProjectManagerInterface) te
 // InitProject initializes a new project
 func InitProject(projectManager services.ProjectManagerInterface, name string, options types.InitOptions) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
-		err := projectManager.InitProject(name, options)
+		projectDir, err := projectManager.InitProject(name, options)
 		return ui.ProjectOperationMsg{
-			Operation: "init",
-			Success:   err == nil,
-			Error:     err,
+			Operation:  "init",
+			Success:    err == nil,
+			Error:      err,
+			ProjectDir: projectDir,
 		}
 	})
 }

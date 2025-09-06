@@ -2,6 +2,7 @@
 package app
 
 import (
+	"github.com/charmbracelet/bubbles/textinput"
 	"uvui/internal/services"
 	"uvui/internal/types"
 	"uvui/internal/ui/panels"
@@ -15,6 +16,8 @@ type Model struct {
 	PythonManager   services.PythonManagerInterface
 	ProjectManager  services.ProjectManagerInterface
 	CommandExecutor services.CommandExecutorInterface
+	TextInput       textinput.Model
+	InputMode       InputMode
 }
 
 // NewModel creates a new application model
@@ -25,6 +28,9 @@ func NewModel() *Model {
 	}
 
 	executor := services.NewCommandExecutor()
+	ti := textinput.New()
+	ti.Placeholder = "Project Name"
+	ti.Focus()
 
 	state := &panels.AppState{
 		ActivePanel: types.StatusPanel,
@@ -51,14 +57,24 @@ func NewModel() *Model {
 		Messages: []string{},
 	}
 
-	return &Model{
+	m := &Model{
 		State:           state,
 		Config:          config,
 		UVInstaller:     services.NewUVInstaller(executor),
 		PythonManager:   services.NewPythonManager(executor),
 		ProjectManager:  services.NewProjectManager(executor),
 		CommandExecutor: executor,
+		TextInput:       ti,
+		InputMode:       InputModeNone,
 	}
+
+	if config.KeybindingsNotFound {
+		m.AddMessage("keybindings.json not found. Using default keybindings.")
+		m.AddMessage("Press 'c' to create a default keybindings.json file.")
+		m.AddMessage("Create keybindings.json in the same directory as the executable to customize.")
+	}
+
+	return m
 }
 
 // AddMessage adds a message to the message list

@@ -22,7 +22,7 @@ type PythonManagerInterface interface {
 // ProjectManagerInterface defines the contract for project management
 type ProjectManagerInterface interface {
 	GetProjectStatus() (*types.ProjectStatus, error)
-	InitProject(name string, options types.InitOptions) error
+	InitProject(name string, options types.InitOptions) (string, error)
 	SyncProject() error
 	LockProject() error
 	GetDependencyTree() (*types.DependencyTree, error)

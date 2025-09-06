@@ -2,11 +2,35 @@
 package app
 
 import (
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 
 	"uvui/internal/services"
 	"uvui/internal/ui"
 )
+
+// handleInitConfig creates a new keybindings.json file with default values
+func (m *Model) handleInitConfig() (tea.Model, tea.Cmd) {
+	_, err := os.Stat("keybindings.json")
+	if err == nil {
+		m.AddMessage("keybindings.json already exists.")
+		return m, nil
+	}
+
+	if os.IsNotExist(err) {
+		err := InitConfig("keybindings.json")
+		if err != nil {
+			m.AddMessage("Error creating keybindings.json: " + err.Error())
+			return m, nil
+		}
+		m.AddMessage("keybindings.json created successfully.")
+		return m, nil
+	}
+
+	m.AddMessage("Error checking keybindings.json: " + err.Error())
+	return m, nil
+}
 
 // CheckUVStatus checks the UV installation status
 func CheckUVStatus(installer services.UVInstallerInterface) tea.Cmd {

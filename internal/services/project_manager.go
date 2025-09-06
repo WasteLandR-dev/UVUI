@@ -71,9 +71,9 @@ func (p *ProjectManager) GetProjectStatus() (*types.ProjectStatus, error) {
 }
 
 // InitProject creates a new UV project
-func (p *ProjectManager) InitProject(name string, options types.InitOptions) error {
+func (p *ProjectManager) InitProject(name string, options types.InitOptions) (string, error) {
 	if !p.executor.IsUVAvailable() {
-		return fmt.Errorf("UV is not available")
+		return "", fmt.Errorf("UV is not available")
 	}
 
 	args := []string{"init"}
@@ -95,7 +95,15 @@ func (p *ProjectManager) InitProject(name string, options types.InitOptions) err
 	}
 
 	_, err := p.executor.Execute("uv", args...)
-	return err
+	if err != nil {
+		return "", err
+	}
+
+	if name != "" {
+		return name, nil
+	}
+
+	return ".", nil
 }
 
 // SyncProject syncs project dependencies
