@@ -19,7 +19,7 @@ func (m *Model) handleInitConfig() (tea.Model, tea.Cmd) {
 	}
 
 	if os.IsNotExist(err) {
-		err := InitConfig("keybindings.json")
+		err := InitConfig()
 		if err != nil {
 			m.AddMessage("Error creating keybindings.json: " + err.Error())
 			return m, nil

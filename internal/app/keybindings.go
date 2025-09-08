@@ -36,8 +36,8 @@ type Config struct {
 }
 
 // LoadConfig loads the configuration from the given path.
-func LoadConfig(path string) (*Config, error) {
-	file, err := os.ReadFile(path)
+func LoadConfig() (*Config, error) {
+	file, err := os.ReadFile("keybindings.json")
 	if err != nil {
 		if os.IsNotExist(err) {
 			config := DefaultConfig()
@@ -57,14 +57,14 @@ func LoadConfig(path string) (*Config, error) {
 }
 
 // InitConfig creates a new keybindings.json file with default values.
-func InitConfig(path string) error {
+func InitConfig() error {
 	config := DefaultConfig()
 	file, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, file, 0644)
+	return os.WriteFile("keybindings.json", file, 0600)
 }
 
 // DefaultConfig returns the default configuration.

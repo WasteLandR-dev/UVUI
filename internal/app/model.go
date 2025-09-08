@@ -22,7 +22,7 @@ type Model struct {
 
 // NewModel creates a new application model.
 func NewModel() *Model {
-	config, err := LoadConfig("keybindings.json")
+	config, err := LoadConfig()
 	if err != nil {
 		panic(err)
 	}

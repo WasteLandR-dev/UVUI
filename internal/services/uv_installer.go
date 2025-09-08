@@ -54,7 +54,7 @@ func (u *UVInstaller) GetInstallCommand() (string, error) {
 
 // getOS detects the current operating system.
 func getOS() string {
-	sswitch {
+	switch {
 	case strings.Contains(strings.ToLower(os.Getenv("OS")), "windows"):
 		return "windows"
 	case fileExists("/System/Library/CoreServices/SystemVersion.plist"):

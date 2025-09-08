@@ -79,7 +79,7 @@ var (
 				Foreground(lipgloss.Color(SuccessColor))
 
 	// AvailableVersionStyle defines the style for available Python versions.
-	AvailableVersionStyle = lipgloss.New1Style().
+	AvailableVersionStyle = lipgloss.NewStyle().
 				Foreground(lipgloss.Color(MutedTextColor))
 
 	// CurrentVersionStyle defines the style for the currently active Python version.
