@@ -11,7 +11,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-// RenderStatusPanel renders the status panel content
+// RenderStatusPanel renders the status panel content.
 func RenderStatusPanel(state *AppState, installCmd string) string {
 	var content strings.Builder
 
@@ -57,7 +57,7 @@ func RenderStatusPanel(state *AppState, installCmd string) string {
 	return content.String()
 }
 
-// GetStatusPanelHelp returns help text for the status panel
+// GetStatusPanelHelp returns help text for the status panel.
 func GetStatusPanelHelp() string {
 	return "i: Install UV | r: Refresh status | ?: Help"
 }

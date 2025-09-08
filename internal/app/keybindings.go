@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// Keybindings holds the keybindings for the application
+// Keybindings holds the keybindings for the application.
 type Keybindings struct {
 	Quit           []string `json:"quit"`
 	NextPanel      []string `json:"next_panel"`
@@ -29,13 +29,13 @@ type Keybindings struct {
 	InitConfig     []string `json:"init_config"`
 }
 
-// Config holds the application configuration
+// Config holds the application configuration.
 type Config struct {
 	Keybindings         Keybindings `json:"keybindings"`
 	KeybindingsNotFound bool        `json:"-"` // This field is not serialized
 }
 
-// LoadConfig loads the configuration from the given path
+// LoadConfig loads the configuration from the given path.
 func LoadConfig(path string) (*Config, error) {
 	file, err := os.ReadFile(path)
 	if err != nil {
@@ -56,7 +56,7 @@ func LoadConfig(path string) (*Config, error) {
 	return &config, nil
 }
 
-// InitConfig creates a new keybindings.json file with default values
+// InitConfig creates a new keybindings.json file with default values.
 func InitConfig(path string) error {
 	config := DefaultConfig()
 	file, err := json.MarshalIndent(config, "", "  ")
@@ -67,7 +67,7 @@ func InitConfig(path string) error {
 	return os.WriteFile(path, file, 0644)
 }
 
-// DefaultConfig returns the default configuration
+// DefaultConfig returns the default configuration.
 func DefaultConfig() *Config {
 	return &Config{
 		Keybindings: Keybindings{
@@ -92,7 +92,7 @@ func DefaultConfig() *Config {
 	}
 }
 
-// handleKeyPress handles keyboard input
+// handleKeyPress handles keyboard input.
 func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	switch {
 	case contains(m.Config.Keybindings.Quit, msg.String()):
@@ -134,6 +134,7 @@ func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// contains checks if a string is present in a slice of strings.
 func contains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {

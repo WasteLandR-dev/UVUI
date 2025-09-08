@@ -15,7 +15,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-// PythonVersions represents the state of Python versions
+// PythonVersions represents the state of Python versions.
 type PythonVersions struct {
 	Available []types.PythonVersion
 	Installed []types.PythonVersion
@@ -23,7 +23,7 @@ type PythonVersions struct {
 	Loading   bool
 }
 
-// RenderPythonPanel renders the Python management panel
+// RenderPythonPanel renders the Python management panel.
 func RenderPythonPanel(state *AppState) string {
 	var content strings.Builder
 
@@ -74,7 +74,7 @@ func RenderPythonPanel(state *AppState) string {
 	return content.String()
 }
 
-// renderVersionLine renders a single Python version line
+// renderVersionLine renders a single Python version line.
 func renderVersionLine(version types.PythonVersion, selected bool) string {
 	var line strings.Builder
 
@@ -105,7 +105,7 @@ func renderVersionLine(version types.PythonVersion, selected bool) string {
 	return line.String()
 }
 
-// MergePythonVersions merges available and installed versions for display (exported)
+// MergePythonVersions merges available and installed versions for display (exported).
 func MergePythonVersions(available, installed []types.PythonVersion) []types.PythonVersion {
 	versionMap := make(map[string]types.PythonVersion)
 
@@ -140,7 +140,7 @@ func MergePythonVersions(available, installed []types.PythonVersion) []types.Pyt
 	return merged
 }
 
-// compareVersions compares two version strings (higher versions first)
+// compareVersions compares two version strings (higher versions first).
 func compareVersions(a, b string) int {
 	// Simple version comparison - split by dots and compare numerically
 	partsA := strings.Split(a, ".")
@@ -168,7 +168,7 @@ func compareVersions(a, b string) int {
 	return 0
 }
 
-// parseVersionPart parses a version part (e.g., "12", "1", "alpha1")
+// parseVersionPart parses a version part (e.g., "12", "1", "alpha1").
 func parseVersionPart(part string) int {
 	// Extract numeric part
 	re := regexp.MustCompile(`^(\d+)`)
@@ -181,7 +181,7 @@ func parseVersionPart(part string) int {
 	return 0
 }
 
-// GetPythonPanelHelp returns help text for the Python panel
+// GetPythonPanelHelp returns help text for the Python panel.
 func GetPythonPanelHelp() string {
 	return "↑↓: Navigate | Enter: Install | d/Del: Delete | p: Pin | i: Refresh"
 }

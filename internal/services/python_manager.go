@@ -11,17 +11,17 @@ import (
 	"uvui/pkg/version"
 )
 
-// PythonManager implements Python version management functionality
+// PythonManager implements Python version management functionality.
 type PythonManager struct {
 	executor CommandExecutorInterface
 }
 
-// NewPythonManager creates a new Python manager
+// NewPythonManager creates a new Python manager.
 func NewPythonManager(executor CommandExecutorInterface) *PythonManager {
 	return &PythonManager{executor: executor}
 }
 
-// ListAvailable lists all available Python versions
+// ListAvailable lists all available Python versions.
 func (p *PythonManager) ListAvailable() ([]types.PythonVersion, error) {
 	if !p.executor.IsUVAvailable() {
 		return nil, fmt.Errorf("UV is not available")
@@ -36,7 +36,7 @@ func (p *PythonManager) ListAvailable() ([]types.PythonVersion, error) {
 	return p.parseAvailableVersions(string(output)), nil
 }
 
-// ListInstalled lists all installed Python versions
+// ListInstalled lists all installed Python versions.
 func (p *PythonManager) ListInstalled() ([]types.PythonVersion, error) {
 	if !p.executor.IsUVAvailable() {
 		return nil, fmt.Errorf("UV is not available")
@@ -51,7 +51,7 @@ func (p *PythonManager) ListInstalled() ([]types.PythonVersion, error) {
 	return p.parseInstalledVersions(string(output)), nil
 }
 
-// Install installs a Python version
+// Install installs a Python version.
 func (p *PythonManager) Install(version string) error {
 	if !p.executor.IsUVAvailable() {
 		return fmt.Errorf("UV is not available")
@@ -61,7 +61,7 @@ func (p *PythonManager) Install(version string) error {
 	return err
 }
 
-// Uninstall removes a Python version
+// Uninstall removes a Python version.
 func (p *PythonManager) Uninstall(version string) error {
 	if !p.executor.IsUVAvailable() {
 		return fmt.Errorf("UV is not available")
@@ -71,7 +71,7 @@ func (p *PythonManager) Uninstall(version string) error {
 	return err
 }
 
-// Pin pins a Python version for the current project
+// Pin pins a Python version for the current project.
 func (p *PythonManager) Pin(version string) error {
 	if !p.executor.IsUVAvailable() {
 		return fmt.Errorf("UV is not available")
@@ -81,7 +81,7 @@ func (p *PythonManager) Pin(version string) error {
 	return err
 }
 
-// Find finds a specific Python version
+// Find finds a specific Python version.
 func (p *PythonManager) Find(version string) (*types.PythonVersion, error) {
 	if !p.executor.IsUVAvailable() {
 		return nil, fmt.Errorf("UV is not available")
@@ -95,7 +95,7 @@ func (p *PythonManager) Find(version string) (*types.PythonVersion, error) {
 	return p.parseFindResult(string(output)), nil
 }
 
-// parseAvailableVersions parses the output of uv python list --only-downloads
+// parseAvailableVersions parses the output of uv python list --only-downloads.
 func (p *PythonManager) parseAvailableVersions(output string) []types.PythonVersion {
 	var versions []types.PythonVersion
 	lines := strings.Split(output, "\n")
@@ -126,7 +126,7 @@ func (p *PythonManager) parseAvailableVersions(output string) []types.PythonVers
 	return versions
 }
 
-// parseInstalledVersions parses the output of uv python list --only-installed
+// parseInstalledVersions parses the output of uv python list --only-installed.
 func (p *PythonManager) parseInstalledVersions(output string) []types.PythonVersion {
 	var versions []types.PythonVersion
 	lines := strings.Split(output, "\n")
@@ -155,7 +155,7 @@ func (p *PythonManager) parseInstalledVersions(output string) []types.PythonVers
 	return versions
 }
 
-// parseFindResult parses the output of uv python find
+// parseFindResult parses the output of uv python find.
 func (p *PythonManager) parseFindResult(output string) *types.PythonVersion {
 	lines := strings.Split(output, "\n")
 	if len(lines) == 0 {
@@ -175,7 +175,7 @@ func (p *PythonManager) parseFindResult(output string) *types.PythonVersion {
 	return nil
 }
 
-// getMockAvailableVersions returns mock data for available versions
+// getMockAvailableVersions returns mock data for available versions.
 func (p *PythonManager) getMockAvailableVersions() []types.PythonVersion {
 	return []types.PythonVersion{
 		{Version: "3.12.1", Installed: false},
@@ -190,7 +190,7 @@ func (p *PythonManager) getMockAvailableVersions() []types.PythonVersion {
 	}
 }
 
-// getMockInstalledVersions returns mock data for installed versions
+// getMockInstalledVersions returns mock data for installed versions.
 func (p *PythonManager) getMockInstalledVersions() []types.PythonVersion {
 	return []types.PythonVersion{
 		{Version: "3.11.6", Installed: true, Current: true, Path: "/usr/local/bin/python3.11"},

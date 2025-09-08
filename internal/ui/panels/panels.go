@@ -2,7 +2,7 @@ package panels
 
 import "uvui/internal/types"
 
-// AppState represents the overall application state
+// AppState represents the overall application state.
 type AppState struct {
 	ActivePanel types.Panel
 	Panels      []types.Panel

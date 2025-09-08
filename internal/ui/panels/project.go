@@ -9,7 +9,7 @@ import (
 	"uvui/internal/ui"
 )
 
-// ProjectState represents the project panel state
+// ProjectState represents the project panel state.
 type ProjectState struct {
 	Name           string
 	Status         *types.ProjectStatus
@@ -20,7 +20,7 @@ type ProjectState struct {
 	ShowTree       bool
 }
 
-// RenderProjectPanel renders the project management panel
+// RenderProjectPanel renders the project management panel.
 func RenderProjectPanel(state *AppState) string {
 	var content strings.Builder
 
@@ -60,7 +60,7 @@ func RenderProjectPanel(state *AppState) string {
 	return content.String()
 }
 
-// renderProjectStatus renders the current project status
+// renderProjectStatus renders the current project status.
 func renderProjectStatus(status *types.ProjectStatus) string {
 	var content strings.Builder
 
@@ -106,7 +106,7 @@ func renderProjectStatus(status *types.ProjectStatus) string {
 	return content.String()
 }
 
-// renderProjectOperations renders available project operations
+// renderProjectOperations renders available project operations.
 func renderProjectOperations(_ *AppState) string {
 	var content strings.Builder
 
@@ -136,7 +136,7 @@ func renderProjectOperations(_ *AppState) string {
 	return content.String()
 }
 
-// renderProjectDependencies renders the project dependencies list
+// renderProjectDependencies renders the project dependencies list.
 func renderProjectDependencies(dependencies []types.ProjectDependency) string {
 	var content strings.Builder
 
@@ -183,7 +183,7 @@ func renderProjectDependencies(dependencies []types.ProjectDependency) string {
 	return content.String()
 }
 
-// renderDependencyTree renders the dependency tree
+// renderDependencyTree renders the dependency tree.
 func renderDependencyTree(tree *types.DependencyTree) string {
 	var content strings.Builder
 
@@ -219,7 +219,7 @@ func renderDependencyTree(tree *types.DependencyTree) string {
 	return content.String()
 }
 
-// renderInitializationHelp renders help for project initialization
+// renderInitializationHelp renders help for project initialization.
 func renderInitializationHelp() string {
 	var content strings.Builder
 
@@ -244,7 +244,7 @@ func renderInitializationHelp() string {
 	return content.String()
 }
 
-// GetProjectPanelHelp returns help text for the project panel
+// GetProjectPanelHelp returns help text for the project panel.
 func GetProjectPanelHelp() string {
 	help := []string{
 		"Project Management Panel Help:",

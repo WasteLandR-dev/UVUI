@@ -10,17 +10,17 @@ import (
 	"uvui/internal/types"
 )
 
-// ProjectManager implements project management functionality
+// ProjectManager implements project management functionality.
 type ProjectManager struct {
 	executor CommandExecutorInterface
 }
 
-// NewProjectManager creates a new project manager
+// NewProjectManager creates a new project manager.
 func NewProjectManager(executor CommandExecutorInterface) *ProjectManager {
 	return &ProjectManager{executor: executor}
 }
 
-// GetProjectStatus returns the current project status
+// GetProjectStatus returns the current project status.
 func (p *ProjectManager) GetProjectStatus() (*types.ProjectStatus, error) {
 	status := &types.ProjectStatus{
 		IsProject: false,
@@ -70,7 +70,7 @@ func (p *ProjectManager) GetProjectStatus() (*types.ProjectStatus, error) {
 	return status, nil
 }
 
-// InitProject creates a new UV project
+// InitProject creates a new UV project.
 func (p *ProjectManager) InitProject(name string, options types.InitOptions) (string, error) {
 	if !p.executor.IsUVAvailable() {
 		return "", fmt.Errorf("UV is not available")
@@ -106,7 +106,7 @@ func (p *ProjectManager) InitProject(name string, options types.InitOptions) (st
 	return ".", nil
 }
 
-// SyncProject syncs project dependencies
+// SyncProject syncs project dependencies.
 func (p *ProjectManager) SyncProject() error {
 	if !p.executor.IsUVAvailable() {
 		return fmt.Errorf("UV is not available")
@@ -116,7 +116,7 @@ func (p *ProjectManager) SyncProject() error {
 	return err
 }
 
-// LockProject locks project dependencies
+// LockProject locks project dependencies.
 func (p *ProjectManager) LockProject() error {
 	if !p.executor.IsUVAvailable() {
 		return fmt.Errorf("UV is not available")
@@ -126,7 +126,7 @@ func (p *ProjectManager) LockProject() error {
 	return err
 }
 
-// GetDependencyTree returns the project dependency tree
+// GetDependencyTree returns the project dependency tree.
 func (p *ProjectManager) GetDependencyTree() (*types.DependencyTree, error) {
 	if !p.executor.IsUVAvailable() {
 		return nil, fmt.Errorf("UV is not available")
@@ -141,7 +141,7 @@ func (p *ProjectManager) GetDependencyTree() (*types.DependencyTree, error) {
 	return p.parseDependencyTree(string(output)), nil
 }
 
-// GetProjectDependencies returns project dependencies
+// GetProjectDependencies returns project dependencies.
 func (p *ProjectManager) GetProjectDependencies() ([]types.ProjectDependency, error) {
 	if !p.executor.IsUVAvailable() {
 		return nil, fmt.Errorf("UV is not available")
@@ -158,7 +158,7 @@ func (p *ProjectManager) GetProjectDependencies() ([]types.ProjectDependency, er
 	return p.getMockDependencies(), nil
 }
 
-// parseDependencyTree parses the output of uv tree
+// parseDependencyTree parses the output of uv tree.
 func (p *ProjectManager) parseDependencyTree(output string) *types.DependencyTree {
 	tree := &types.DependencyTree{
 		Dependencies: []types.TreeNode{},
@@ -199,7 +199,7 @@ func (p *ProjectManager) parseDependencyTree(output string) *types.DependencyTre
 	return tree
 }
 
-// getMockDependencyTree returns mock dependency tree for demo
+// getMockDependencyTree returns mock dependency tree for demo.
 func (p *ProjectManager) getMockDependencyTree() *types.DependencyTree {
 	return &types.DependencyTree{
 		Dependencies: []types.TreeNode{
@@ -216,7 +216,7 @@ func (p *ProjectManager) getMockDependencyTree() *types.DependencyTree {
 	}
 }
 
-// getMockDependencies returns mock dependencies for demo
+// getMockDependencies returns mock dependencies for demo.
 func (p *ProjectManager) getMockDependencies() []types.ProjectDependency {
 	return []types.ProjectDependency{
 		{Name: "requests", Version: "^2.31.0", Type: "main"},

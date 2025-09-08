@@ -8,7 +8,7 @@ import (
 	"uvui/internal/ui/panels"
 )
 
-// Model represents the application state and dependencies
+// Model represents the application state and dependencies.
 type Model struct {
 	State           *panels.AppState
 	Config          *Config
@@ -20,7 +20,7 @@ type Model struct {
 	InputMode       InputMode
 }
 
-// NewModel creates a new application model
+// NewModel creates a new application model.
 func NewModel() *Model {
 	config, err := LoadConfig("keybindings.json")
 	if err != nil {
@@ -77,7 +77,7 @@ func NewModel() *Model {
 	return m
 }
 
-// AddMessage adds a message to the message list
+// AddMessage adds a message to the message list.
 func (m *Model) AddMessage(msg string) {
 	m.State.Messages = append(m.State.Messages, msg)
 	// Keep only last 10 messages
@@ -86,7 +86,7 @@ func (m *Model) AddMessage(msg string) {
 	}
 }
 
-// GetSelectedPythonVersion returns the currently selected Python version
+// GetSelectedPythonVersion returns the currently selected Python version.
 func (m *Model) GetSelectedPythonVersion() *types.PythonVersion {
 	// Get the merged list to match what's displayed
 	merged := m.GetMergedPythonVersions()
@@ -102,7 +102,7 @@ func (m *Model) GetSelectedPythonVersion() *types.PythonVersion {
 	return &merged[m.State.PythonVersions.Selected]
 }
 
-// ValidateAndFixSelection ensures the selection index is within bounds
+// ValidateAndFixSelection ensures the selection index is within bounds.
 func (m *Model) ValidateAndFixSelection() {
 	merged := m.GetMergedPythonVersions()
 	if len(merged) == 0 {
@@ -118,19 +118,19 @@ func (m *Model) ValidateAndFixSelection() {
 	}
 }
 
-// GetMergedPythonVersions returns the merged list of available and installed versions
+// GetMergedPythonVersions returns the merged list of available and installed versions.
 func (m *Model) GetMergedPythonVersions() []types.PythonVersion {
 	// Import the panels package to use MergePythonVersions
 	// This is a bit of a circular dependency, but necessary for consistency
 	return panels.MergePythonVersions(m.State.PythonVersions.Available, m.State.PythonVersions.Installed)
 }
 
-// GetMergedPythonVersionsCount returns the count of merged Python versions
+// GetMergedPythonVersionsCount returns the count of merged Python versions.
 func (m *Model) GetMergedPythonVersionsCount() int {
 	return len(m.GetMergedPythonVersions())
 }
 
-// UpdatePythonVersions updates the Python versions in the state
+// UpdatePythonVersions updates the Python versions in the state.
 func (m *Model) UpdatePythonVersions(available, installed []types.PythonVersion) {
 	m.State.PythonVersions.Available = available
 	m.State.PythonVersions.Installed = installed
@@ -140,29 +140,29 @@ func (m *Model) UpdatePythonVersions(available, installed []types.PythonVersion)
 	m.ValidateAndFixSelection()
 }
 
-// UpdateProjectStatus updates the project status in the state
+// UpdateProjectStatus updates the project status in the state.
 func (m *Model) UpdateProjectStatus(status *types.ProjectStatus) {
 	m.State.ProjectState.Status = status
 	m.State.ProjectState.Loading = false
 }
 
-// UpdateProjectDependencies updates project dependencies and tree
+// UpdateProjectDependencies updates project dependencies and tree.
 func (m *Model) UpdateProjectDependencies(deps []types.ProjectDependency, tree *types.DependencyTree) {
 	m.State.ProjectState.Dependencies = deps
 	m.State.ProjectState.DependencyTree = tree
 }
 
-// ToggleTreeView toggles between dependency list and tree view
+// ToggleTreeView toggles between dependency list and tree view.
 func (m *Model) ToggleTreeView() {
 	m.State.ProjectState.ShowTree = !m.State.ProjectState.ShowTree
 }
 
-// SetProjectLoading sets the project loading state
+// SetProjectLoading sets the project loading state.
 func (m *Model) SetProjectLoading(loading bool) {
 	m.State.ProjectState.Loading = loading
 }
 
-// SetOperation sets the current operation status
+// SetOperation sets the current operation status.
 func (m *Model) SetOperation(operation, target string, inProgress bool) {
 	m.State.Operation = types.OperationStatus{
 		InProgress: inProgress,
@@ -171,7 +171,7 @@ func (m *Model) SetOperation(operation, target string, inProgress bool) {
 	}
 }
 
-// CompleteOperation completes the current operation
+// CompleteOperation completes the current operation.
 func (m *Model) CompleteOperation(success bool, err error) {
 	m.State.Operation.InProgress = false
 	m.State.Operation.Success = success

@@ -5,7 +5,7 @@ import (
 	"uvui/internal/ui"
 )
 
-// RenderEnvironmentPanel renders the environment management panel
+// RenderEnvironmentPanel renders the environment management panel.
 func RenderEnvironmentPanel(state *AppState) string {
 	content := "Environment Management\n\n"
 
@@ -21,7 +21,7 @@ func RenderEnvironmentPanel(state *AppState) string {
 	return content
 }
 
-// GetEnvironmentPanelHelp returns help text for the environment panel
+// GetEnvironmentPanelHelp returns help text for the environment panel.
 func GetEnvironmentPanelHelp() string {
 	return "Coming in Phase 5: Environment operations"
 }

@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-// LoadProjectStatus loads the current project status
+// LoadProjectStatus loads the current project status.
 func LoadProjectStatus(projectManager services.ProjectManagerInterface) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		status, err := projectManager.GetProjectStatus()
@@ -20,7 +20,7 @@ func LoadProjectStatus(projectManager services.ProjectManagerInterface) tea.Cmd 
 	})
 }
 
-// LoadProjectDependencies loads project dependencies and dependency tree
+// LoadProjectDependencies loads project dependencies and dependency tree.
 func LoadProjectDependencies(projectManager services.ProjectManagerInterface) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		deps, err1 := projectManager.GetProjectDependencies()
@@ -41,7 +41,7 @@ func LoadProjectDependencies(projectManager services.ProjectManagerInterface) te
 	})
 }
 
-// InitProject initializes a new project
+// InitProject initializes a new project.
 func InitProject(projectManager services.ProjectManagerInterface, name string, options types.InitOptions) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		projectDir, err := projectManager.InitProject(name, options)
@@ -54,7 +54,7 @@ func InitProject(projectManager services.ProjectManagerInterface, name string, o
 	})
 }
 
-// SyncProject syncs project dependencies
+// SyncProject syncs project dependencies.
 func SyncProject(projectManager services.ProjectManagerInterface) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		err := projectManager.SyncProject()
@@ -66,7 +66,7 @@ func SyncProject(projectManager services.ProjectManagerInterface) tea.Cmd {
 	})
 }
 
-// LockProject locks project dependencies
+// LockProject locks project dependencies.
 func LockProject(projectManager services.ProjectManagerInterface) tea.Cmd {
 	return tea.Cmd(func() tea.Msg {
 		err := projectManager.LockProject()
