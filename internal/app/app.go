@@ -1,10 +1,13 @@
+// Package app provides the core application logic.
 package app
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
@@ -13,7 +16,31 @@ import (
 	"uvui/internal/ui/panels"
 )
 
-// Init initializes the application
+// InputMode defines the different input modes for the text input field.
+type InputMode int
+
+const (
+	// InputModeNone indicates that the text input is not active.
+	InputModeNone InputMode = iota
+	// InputModeProjectName indicates that the text input is for entering a project name.
+	InputModeProjectName
+	// InputModePythonVersion indicates that the text input is for selecting a Python version.
+	InputModePythonVersion
+)
+
+// getDirection converts a key string to a direction for navigation.
+func getDirection(key string) int {
+	switch key {
+	case "up":
+		return -1
+	case "down":
+		return 1
+	default:
+		return 0
+	}
+}
+
+// Init initializes the application.
 func (m *Model) Init() tea.Cmd {
 	return tea.Batch(
 		CheckUVStatus(m.UVInstaller),
@@ -21,7 +48,7 @@ func (m *Model) Init() tea.Cmd {
 	)
 }
 
-// Update handles messages and updates the model
+// Update handles messages and updates the model.
 func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -30,6 +57,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		if msg.String() == "enter" && m.InputMode == InputModePythonVersion {
+			return m.handleEnterKey()
+		} else if m.InputMode == InputModePythonVersion && (msg.String() == "up" || msg.String() == "down") {
+			return m.handleVerticalNavigation(getDirection(msg.String()))
+		} else if m.InputMode != InputModeNone {
+			return m.handleTextInput(msg)
+		}
 		return m.handleKeyPress(msg)
 
 	case ui.UVInstalledMsg:
@@ -40,52 +74,41 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case ui.PythonOperationMsg:
 		return m.handlePythonOperationMsg(msg)
+
+	case ui.ProjectStatusLoadedMsg:
+		return m.handleProjectStatusLoadedMsg(msg)
+
+	case ui.ProjectDependenciesLoadedMsg:
+		return m.handleProjectDependenciesLoadedMsg(msg)
+
+	case ui.ProjectOperationMsg:
+		return m.handleProjectOperationMsg(msg)
 	}
 
 	return m, nil
 }
 
-// handleKeyPress handles keyboard input
-func (m *Model) handleKeyPress(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "ctrl+c", "q":
-		return m, tea.Quit
+// handleTextInput handles text input when in an input mode.
+func (m *Model) handleTextInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
 
-	case "tab":
-		return m.handleTabNavigation(1)
+	if msg.Type == tea.KeyEnter {
+		projectName := m.TextInput.Value()
+		m.State.ProjectState.Name = projectName
+		m.InputMode = InputModeNone // Reset input mode
+		m.TextInput.Reset()
 
-	case "shift+tab":
-		return m.handleTabNavigation(-1)
-
-	case "up", "k":
-		return m.handleVerticalNavigation(-1)
-
-	case "down", "j":
-		return m.handleVerticalNavigation(1)
-
-	case "enter":
-		return m.handleEnterKey()
-
-	case "d", "delete":
-		return m.handleDeleteKey()
-
-	case "p":
-		return m.handlePinKey()
-
-	case "i":
-		return m.handleInstallRefresh()
-
-	case "r":
-		return m.handleRefresh()
-
-	case "?":
-		return m.handleHelp()
+		m.SetOperation("init", projectName, true)
+		m.AddMessage(fmt.Sprintf("Initializing new project '%s'...", projectName))
+		options := types.InitOptions{} // No python version
+		return m, InitProject(m.ProjectManager, projectName, options)
 	}
 
-	return m, nil
+	m.TextInput, cmd = m.TextInput.Update(msg)
+	return m, cmd
 }
 
-// handleTabNavigation handles tab and shift+tab navigation
+// handleTabNavigation handles tab and shift+tab navigation between panels.
 func (m *Model) handleTabNavigation(direction int) (tea.Model, tea.Cmd) {
 	if direction > 0 {
 		m.State.ActivePanel = types.Panel((int(m.State.ActivePanel) + 1) % len(m.State.Panels))
@@ -98,17 +121,23 @@ func (m *Model) handleTabNavigation(direction int) (tea.Model, tea.Cmd) {
 	}
 
 	// Load Python versions when entering Python panel
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.PythonVersions.Loading {
 		m.State.PythonVersions.Loading = true
 		return m, LoadPythonVersions(m.PythonManager)
+	}
+
+	// Load project status when entering Project panel
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.ProjectState.Loading {
+		m.State.ProjectState.Loading = true
+		return m, LoadProjectStatus(m.ProjectManager)
 	}
 
 	return m, nil
 }
 
-// handleVerticalNavigation handles up/down arrow navigation within panels
+// handleVerticalNavigation handles up/down arrow navigation within panels.
 func (m *Model) handleVerticalNavigation(direction int) (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel {
+	if m.State.ActivePanel == types.PythonPanel || m.InputMode == InputModePythonVersion {
 		// Merge available and installed for display order
 		allVersions := panels.MergePythonVersions(m.State.PythonVersions.Available, m.State.PythonVersions.Installed)
 		if len(allVersions) > 0 {
@@ -122,9 +151,17 @@ func (m *Model) handleVerticalNavigation(direction int) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleEnterKey handles enter key press
+// handleEnterKey handles enter key press.
 func (m *Model) handleEnterKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.InputMode == InputModePythonVersion {
+		selectedVersion := m.GetSelectedPythonVersion()
+		if selectedVersion != nil {
+			m.SetOperation("init", m.State.ProjectState.Name, true)
+			m.AddMessage(fmt.Sprintf("Initializing new project '%s' with python %s...", m.State.ProjectState.Name, selectedVersion.Version))
+			options := types.InitOptions{PythonVersion: selectedVersion.Version}
+			return m, InitProject(m.ProjectManager, m.State.ProjectState.Name, options)
+		}
+	} else if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && !selectedVersion.Installed {
 			m.SetOperation("install", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Installing Python %s...", selectedVersion.Version))
@@ -134,9 +171,9 @@ func (m *Model) handleEnterKey() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleDeleteKey handles delete key press
+// handleDeleteKey handles delete key press.
 func (m *Model) handleDeleteKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && selectedVersion.Installed && !selectedVersion.Current {
 			m.SetOperation("uninstall", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Uninstalling Python %s...", selectedVersion.Version))
@@ -146,9 +183,9 @@ func (m *Model) handleDeleteKey() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handlePinKey handles pin key press
+// handlePinKey handles pin key press.
 func (m *Model) handlePinKey() (tea.Model, tea.Cmd) {
-	if m.State.ActivePanel == types.PythonPanel && m.State.UVStatus.Installed && !m.State.Operation.InProgress {
+	if m.State.ActivePanel == types.PythonPanel && m.State.Installed && !m.State.Operation.InProgress {
 		if selectedVersion := m.GetSelectedPythonVersion(); selectedVersion != nil && selectedVersion.Installed {
 			m.SetOperation("pin", selectedVersion.Version, true)
 			m.AddMessage(fmt.Sprintf("Pinning Python %s...", selectedVersion.Version))
@@ -158,49 +195,64 @@ func (m *Model) handlePinKey() (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-// handleInstallRefresh handles install/refresh key press
+// handleInstallRefresh handles install/refresh key press.
 func (m *Model) handleInstallRefresh() (tea.Model, tea.Cmd) {
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
-		if !m.State.UVStatus.Installed && !m.State.Installing {
+		if !m.State.Installed && !m.State.Installing {
 			m.State.Installing = true
 			m.AddMessage("Installing UV...")
 			return m, InstallUV(m.UVInstaller)
 		}
 	case types.PythonPanel:
-		if m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+		if m.State.Installed && !m.State.PythonVersions.Loading {
 			m.State.PythonVersions.Loading = true
 			m.AddMessage("Refreshing Python versions...")
 			return m, LoadPythonVersions(m.PythonManager)
+		}
+	case types.ProjectPanel:
+		// Initialize new project
+		if m.State.Installed && !m.State.Operation.InProgress {
+			if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
+				m.SetOperation("init", "", true)
+				m.AddMessage("Initializing new project...")
+				return m, InitProject(m.ProjectManager, "", types.InitOptions{})
+			}
 		}
 	}
 	return m, nil
 }
 
-// handleRefresh handles refresh key press
+// handleRefresh handles refresh key press.
 func (m *Model) handleRefresh() (tea.Model, tea.Cmd) {
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
 		m.AddMessage("Refreshing UV status...")
 		return m, CheckUVStatus(m.UVInstaller)
 	case types.PythonPanel:
-		if m.State.UVStatus.Installed && !m.State.PythonVersions.Loading {
+		if m.State.Installed && !m.State.PythonVersions.Loading {
 			m.State.PythonVersions.Loading = true
 			m.AddMessage("Refreshing Python versions...")
 			return m, LoadPythonVersions(m.PythonManager)
+		}
+	case types.ProjectPanel:
+		if m.State.Installed && !m.State.ProjectState.Loading {
+			m.State.ProjectState.Loading = true
+			m.AddMessage("Refreshing project status...")
+			return m, LoadProjectStatus(m.ProjectManager)
 		}
 	}
 	return m, nil
 }
 
-// handleHelp handles help key press
+// handleHelp handles help key press.
 func (m *Model) handleHelp() (tea.Model, tea.Cmd) {
 	helpText := m.getCurrentPanelHelp()
 	m.AddMessage(fmt.Sprintf("Help: %s", helpText))
 	return m, nil
 }
 
-// getCurrentPanelHelp returns help text for the current panel
+// getCurrentPanelHelp returns help text for the current panel.
 func (m *Model) getCurrentPanelHelp() string {
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
@@ -216,22 +268,23 @@ func (m *Model) getCurrentPanelHelp() string {
 	}
 }
 
-// Message handlers
+// handleUVInstalledMsg handles the message for when UV installation is complete.
 func (m *Model) handleUVInstalledMsg(msg ui.UVInstalledMsg) (tea.Model, tea.Cmd) {
 	m.State.Installing = false
 	if msg.Success {
-		m.State.UVStatus.Installed = true
-		m.State.UVStatus.Version = msg.Version
+		m.State.Installed = true
+		m.State.Version = msg.Version
 		m.AddMessage("UV installation completed successfully!")
 	} else if msg.Error != nil {
 		m.AddMessage(fmt.Sprintf("UV installation failed: %v", msg.Error))
 	} else {
-		m.State.UVStatus.Installed = false
+		m.State.Installed = false
 		m.AddMessage("UV is not installed")
 	}
 	return m, nil
 }
 
+// handlePythonVersionsLoadedMsg handles the message for when Python versions are loaded.
 func (m *Model) handlePythonVersionsLoadedMsg(msg ui.PythonVersionsLoadedMsg) (tea.Model, tea.Cmd) {
 	m.State.PythonVersions.Loading = false
 	if msg.Error != nil {
@@ -244,22 +297,22 @@ func (m *Model) handlePythonVersionsLoadedMsg(msg ui.PythonVersionsLoadedMsg) (t
 	return m, nil
 }
 
+// handlePythonOperationMsg handles the message for when a Python operation is complete.
 func (m *Model) handlePythonOperationMsg(msg ui.PythonOperationMsg) (tea.Model, tea.Cmd) {
 	m.CompleteOperation(msg.Success, msg.Error)
 
-	if msg.Success {
-		m.AddMessage(fmt.Sprintf("Successfully %sed Python %s", msg.Operation, msg.Target))
-		// Reload Python versions after successful operation
-		m.State.PythonVersions.Loading = true
-		return m, LoadPythonVersions(m.PythonManager)
-	} else {
+	if !msg.Success {
 		m.AddMessage(fmt.Sprintf("Failed to %s Python %s: %v", msg.Operation, msg.Target, msg.Error))
+		return m, nil
 	}
 
-	return m, nil
+	m.AddMessage(fmt.Sprintf("Successfully %sed Python %s", msg.Operation, msg.Target))
+	// Reload Python versions after successful operation
+	m.State.PythonVersions.Loading = true
+	return m, LoadPythonVersions(m.PythonManager)
 }
 
-// View renders the application UI
+// View renders the application UI.
 func (m *Model) View() string {
 	if m.State.Width == 0 {
 		return "Initializing..."
@@ -272,7 +325,15 @@ func (m *Model) View() string {
 	tabs := m.renderTabs()
 
 	// Main content based on active panel
-	content := m.renderActivePanel()
+	var content string
+	switch m.InputMode {
+	case InputModeProjectName:
+		content = m.TextInput.View()
+	case InputModePythonVersion:
+		content = panels.RenderPythonPanel(m.State)
+	default:
+		content = m.renderActivePanel()
+	}
 
 	// Status bar
 	statusBar := m.renderStatusBar()
@@ -291,7 +352,7 @@ func (m *Model) View() string {
 	)
 }
 
-// renderTabs renders the navigation tabs
+// renderTabs renders the navigation tabs.
 func (m *Model) renderTabs() string {
 	tabNames := []string{"Status", "Python", "Project", "Environment"}
 	var tabs []string
@@ -307,7 +368,7 @@ func (m *Model) renderTabs() string {
 	return lipgloss.JoinHorizontal(lipgloss.Top, tabs...)
 }
 
-// renderActivePanel renders the content of the active panel
+// renderActivePanel renders the content of the active panel.
 func (m *Model) renderActivePanel() string {
 	style := ui.PanelStyle
 	if m.State.ActivePanel == types.StatusPanel {
@@ -317,7 +378,8 @@ func (m *Model) renderActivePanel() string {
 	var content string
 	switch m.State.ActivePanel {
 	case types.StatusPanel:
-		content = panels.RenderStatusPanel(m.State, m.UVInstaller)
+		installCmd, _ := m.UVInstaller.GetInstallCommand()
+		content = panels.RenderStatusPanel(m.State, installCmd)
 	case types.PythonPanel:
 		style = ui.ActivePanelStyle
 		content = panels.RenderPythonPanel(m.State)
@@ -332,7 +394,7 @@ func (m *Model) renderActivePanel() string {
 	return style.Render(content)
 }
 
-// renderStatusBar renders the bottom status bar
+// renderStatusBar renders the bottom status bar.
 func (m *Model) renderStatusBar() string {
 	osInfo := fmt.Sprintf("OS: %s", getOS())
 	panelInfo := fmt.Sprintf("Panel: %d/%d", int(m.State.ActivePanel)+1, len(m.State.Panels))
@@ -341,20 +403,142 @@ func (m *Model) renderStatusBar() string {
 		lipgloss.JoinHorizontal(
 			lipgloss.Left,
 			osInfo,
-			strings.Repeat(" ", max(0, m.State.Width-len(osInfo)-len(panelInfo)-4)),
+			strings.Repeat(" ", maxInt(0, m.State.Width-len(osInfo)-len(panelInfo)-4)),
 			panelInfo,
 		),
 	)
 }
 
-// Helper functions
-func max(a, b int) int {
+// handleSyncKey handles sync key press.
+func (m *Model) handleSyncKey() (tea.Model, tea.Cmd) {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
+		if m.State.ProjectState.Status != nil && m.State.ProjectState.Status.IsProject {
+			m.SetOperation("sync", "", true)
+			m.AddMessage("Syncing project dependencies...")
+			return m, SyncProject(m.ProjectManager)
+		}
+	}
+	return m, nil
+}
+
+// handleLockOrLibKey handles lock/lib key press.
+func (m *Model) handleLockOrLibKey() (tea.Model, tea.Cmd) {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
+		if m.State.ProjectState.Status != nil && m.State.ProjectState.Status.IsProject {
+			// Lock dependencies if in project
+			m.SetOperation("lock", "", true)
+			m.AddMessage("Locking project dependencies...")
+			return m, LockProject(m.ProjectManager)
+		}
+		// Initialize as library if not in project
+		m.SetOperation("init", "library", true)
+		m.AddMessage("Initializing library project...")
+		return m, InitProject(m.ProjectManager, "", types.InitOptions{Lib: true})
+
+	}
+	return m, nil
+}
+
+// handleToggleKey handles toggle key press.
+func (m *Model) handleToggleKey() (tea.Model, tea.Cmd) {
+	if m.State.ActivePanel == types.ProjectPanel {
+		if m.State.ProjectState.Status != nil && m.State.ProjectState.Status.IsProject {
+			m.ToggleTreeView()
+			m.AddMessage("Toggled dependency view")
+		}
+	}
+	return m, nil
+}
+
+// handleAppKey handles app key press.
+func (m *Model) handleAppKey() (tea.Model, tea.Cmd) {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
+		if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
+			m.SetOperation("init", "app", true)
+			m.AddMessage("Initializing app project...")
+			return m, InitProject(m.ProjectManager, "", types.InitOptions{App: true})
+		}
+	}
+	return m, nil
+}
+
+// handleNewProjectKey handles new project key press.
+func (m *Model) handleNewProjectKey() (tea.Model, tea.Cmd) {
+	if m.State.ActivePanel == types.ProjectPanel && m.State.Installed && !m.State.Operation.InProgress {
+		if m.State.ProjectState.Status == nil || !m.State.ProjectState.Status.IsProject {
+			m.InputMode = InputModeProjectName
+			m.AddMessage("Please enter the project name:")
+			return m, textinput.Blink
+		}
+	}
+	return m, nil
+}
+
+// handleProjectStatusLoadedMsg handles the message for when project status is loaded.
+func (m *Model) handleProjectStatusLoadedMsg(msg ui.ProjectStatusLoadedMsg) (tea.Model, tea.Cmd) {
+	m.UpdateProjectStatus(msg.Status)
+	if msg.Error != nil {
+		m.AddMessage(fmt.Sprintf("Error loading project status: %s", msg.Error))
+		return m, nil
+	}
+
+	m.AddMessage("Project status loaded")
+
+	// If we have a project, load dependencies
+	if msg.Status != nil && msg.Status.IsProject {
+		return m, LoadProjectDependencies(m.ProjectManager)
+	}
+
+	return m, nil
+}
+
+// handleProjectDependenciesLoadedMsg handles the message for when project dependencies are loaded.
+func (m *Model) handleProjectDependenciesLoadedMsg(msg ui.ProjectDependenciesLoadedMsg) (tea.Model, tea.Cmd) {
+	m.UpdateProjectDependencies(msg.Dependencies, msg.Tree)
+	if msg.Error != nil {
+		m.AddMessage(fmt.Sprintf("Error loading dependencies: %s", msg.Error))
+	} else {
+		m.AddMessage(fmt.Sprintf("Loaded %d dependencies", len(msg.Dependencies)))
+	}
+	return m, nil
+}
+
+// handleProjectOperationMsg handles the message for when a project operation is complete.
+func (m *Model) handleProjectOperationMsg(msg ui.ProjectOperationMsg) (tea.Model, tea.Cmd) {
+	m.CompleteOperation(msg.Success, msg.Error)
+
+	if !msg.Success {
+		m.AddMessage(fmt.Sprintf("Failed to %s: %v", msg.Operation, msg.Error))
+		return m, nil
+	}
+
+	if msg.Operation == "init" && msg.ProjectDir != "" && msg.ProjectDir != "." {
+		err := os.Chdir(msg.ProjectDir)
+		if err != nil {
+			m.AddMessage(fmt.Sprintf("Failed to change directory to %s: %v", msg.ProjectDir, err))
+			return m, nil
+		}
+		m.AddMessage(fmt.Sprintf("Changed directory to %s", msg.ProjectDir))
+	}
+
+	m.AddMessage(fmt.Sprintf("Successfully completed %s operation", msg.Operation))
+	// Reload project status and dependencies after successful operations
+	m.State.ProjectState.Loading = true
+	return m, tea.Batch(
+		LoadProjectStatus(m.ProjectManager),
+		LoadProjectDependencies(m.ProjectManager),
+	)
+}
+
+// maxInt returns the larger of two integers.
+func maxInt(a, b int) int {
 	if a > b {
 		return a
 	}
 	return b
 }
 
+// getOS returns the name of the operating system.
 func getOS() string {
 	switch runtime.GOOS {
 	case "darwin":

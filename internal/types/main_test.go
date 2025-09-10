@@ -28,25 +28,6 @@ func TestPythonVersion(t *testing.T) {
 	assert.Equal(t, "/usr/local/bin/python3.12", version.Path)
 }
 
-func TestPythonVersions(t *testing.T) {
-	versions := PythonVersions{
-		Available: []PythonVersion{
-			{Version: "3.12.0", Installed: false},
-			{Version: "3.11.0", Installed: false},
-		},
-		Installed: []PythonVersion{
-			{Version: "3.11.0", Installed: true, Current: true},
-		},
-		Selected: 0,
-		Loading:  false,
-	}
-
-	assert.Len(t, versions.Available, 2)
-	assert.Len(t, versions.Installed, 1)
-	assert.Equal(t, 0, versions.Selected)
-	assert.False(t, versions.Loading)
-}
-
 func TestOperationStatus(t *testing.T) {
 	status := OperationStatus{
 		InProgress: true,
@@ -61,29 +42,6 @@ func TestOperationStatus(t *testing.T) {
 	assert.Equal(t, "3.12.0", status.Target)
 	assert.False(t, status.Success)
 	assert.Nil(t, status.Error)
-}
-
-func TestAppState(t *testing.T) {
-	state := AppState{
-		ActivePanel: StatusPanel,
-		Panels: []Panel{
-			StatusPanel,
-			PythonPanel,
-			ProjectPanel,
-			EnvironmentPanel,
-		},
-		Width:      100,
-		Height:     50,
-		Installing: false,
-		Messages:   []string{},
-	}
-
-	assert.Equal(t, StatusPanel, state.ActivePanel)
-	assert.Len(t, state.Panels, 4)
-	assert.Equal(t, 100, state.Width)
-	assert.Equal(t, 50, state.Height)
-	assert.False(t, state.Installing)
-	assert.Len(t, state.Messages, 0)
 }
 
 func TestUVStatus(t *testing.T) {
@@ -122,28 +80,6 @@ func TestPythonVersionComparison(t *testing.T) {
 
 	// Test that different versions are not equal
 	assert.NotEqual(t, version1.Version, version2.Version)
-}
-
-func TestEmptyAppState(t *testing.T) {
-	// Test creating an empty app state
-	var state AppState
-
-	// Test default values
-	assert.Equal(t, Panel(0), state.ActivePanel)
-	assert.Nil(t, state.Panels)
-	assert.Equal(t, 0, state.Width)
-	assert.Equal(t, 0, state.Height)
-	assert.False(t, state.Installing)
-	assert.Nil(t, state.Messages)
-}
-
-func TestPythonVersionsEmpty(t *testing.T) {
-	versions := PythonVersions{}
-
-	assert.Nil(t, versions.Available)
-	assert.Nil(t, versions.Installed)
-	assert.Equal(t, 0, versions.Selected)
-	assert.False(t, versions.Loading)
 }
 
 func TestOperationStatusEmpty(t *testing.T) {

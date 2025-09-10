@@ -1,7 +1,9 @@
+// Package panels provides UI panels for the application.
 package panels
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -14,13 +16,21 @@ import (
 	"golang.org/x/text/language"
 )
 
-// RenderPythonPanel renders the Python management panel
-func RenderPythonPanel(state *types.AppState) string {
+// PythonVersions represents the state of Python versions.
+type PythonVersions struct {
+	Available []types.PythonVersion
+	Installed []types.PythonVersion
+	Selected  int
+	Loading   bool
+}
+
+// RenderPythonPanel renders the Python management panel.
+func RenderPythonPanel(state *AppState) string {
 	var content strings.Builder
 
 	content.WriteString("Python Version Management\n\n")
 
-	if !state.UVStatus.Installed {
+	if !state.Installed {
 		content.WriteString(ui.ErrorStyle.Render("UV must be installed first to manage Python versions."))
 		return content.String()
 	}
@@ -42,8 +52,9 @@ func RenderPythonPanel(state *types.AppState) string {
 	content.WriteString(fmt.Sprintf("Python Versions (%d available):\n\n", len(allVersions)))
 
 	// Render version list
+	pinnedVersion := getPinnedVersion()
 	for i, version := range allVersions {
-		line := renderVersionLine(version, i == state.PythonVersions.Selected)
+		line := renderVersionLine(version, i == state.PythonVersions.Selected, pinnedVersion)
 		content.WriteString(line + "\n")
 	}
 
@@ -58,11 +69,15 @@ func RenderPythonPanel(state *types.AppState) string {
 			state.Operation.Target)))
 	}
 
+	// Show help bar
+	content.WriteString("\n\n---\n")
+	content.WriteString(ui.HelpStyle.Render(GetPythonPanelHelp()))
+
 	return content.String()
 }
 
-// renderVersionLine renders a single Python version line
-func renderVersionLine(version types.PythonVersion, selected bool) string {
+// renderVersionLine renders a single Python version line.
+func renderVersionLine(version types.PythonVersion, selected bool, pinnedVersion string) string {
 	var line strings.Builder
 
 	// Selection indicator
@@ -74,7 +89,9 @@ func renderVersionLine(version types.PythonVersion, selected bool) string {
 
 	// Version number with status styling
 	versionText := version.Version
-	if version.Current {
+	if version.Version == pinnedVersion {
+		versionText = ui.PinnedVersionStyle.Render(versionText + " (pinned)")
+	} else if version.Current {
 		versionText = ui.CurrentVersionStyle.Render(versionText + " (current)")
 	} else if version.Installed {
 		versionText = ui.InstalledVersionStyle.Render(versionText + " ✓")
@@ -92,7 +109,7 @@ func renderVersionLine(version types.PythonVersion, selected bool) string {
 	return line.String()
 }
 
-// MergePythonVersions merges available and installed versions for display (exported)
+// MergePythonVersions merges available and installed versions for display (exported).
 func MergePythonVersions(available, installed []types.PythonVersion) []types.PythonVersion {
 	versionMap := make(map[string]types.PythonVersion)
 
@@ -127,7 +144,7 @@ func MergePythonVersions(available, installed []types.PythonVersion) []types.Pyt
 	return merged
 }
 
-// compareVersions compares two version strings (higher versions first)
+// compareVersions compares two version strings (higher versions first).
 func compareVersions(a, b string) int {
 	// Simple version comparison - split by dots and compare numerically
 	partsA := strings.Split(a, ".")
@@ -155,7 +172,7 @@ func compareVersions(a, b string) int {
 	return 0
 }
 
-// parseVersionPart parses a version part (e.g., "12", "1", "alpha1")
+// parseVersionPart parses a version part (e.g., "12", "1", "alpha1").
 func parseVersionPart(part string) int {
 	// Extract numeric part
 	re := regexp.MustCompile(`^(\d+)`)
@@ -168,7 +185,16 @@ func parseVersionPart(part string) int {
 	return 0
 }
 
-// GetPythonPanelHelp returns help text for the Python panel
+// GetPythonPanelHelp returns help text for the Python panel.
 func GetPythonPanelHelp() string {
-	return "↑↓: Navigate | Enter: Install | d: Delete | p: Pin | i: Refresh"
+	return "↑↓: Navigate | Enter: Install | d/Del: Delete | p: Pin | i: Refresh"
+}
+
+// getPinnedVersion reads the pinned Python version from the .python-version file.
+func getPinnedVersion() string {
+	content, err := os.ReadFile(".python-version")
+	if err != nil {
+		return "3.12"
+	}
+	return strings.TrimSpace(string(content))
 }

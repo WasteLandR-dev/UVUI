@@ -1,13 +1,38 @@
+// Package app provides the core application logic.
 package app
 
 import (
+	"os"
+
 	tea "github.com/charmbracelet/bubbletea"
 
 	"uvui/internal/services"
 	"uvui/internal/ui"
 )
 
-// CheckUVStatus checks the UV installation status
+// handleInitConfig creates a new keybindings.json file with default values.
+func (m *Model) handleInitConfig() (tea.Model, tea.Cmd) {
+	_, err := os.Stat("keybindings.json")
+	if err == nil {
+		m.AddMessage("keybindings.json already exists.")
+		return m, nil
+	}
+
+	if os.IsNotExist(err) {
+		err := InitConfig()
+		if err != nil {
+			m.AddMessage("Error creating keybindings.json: " + err.Error())
+			return m, nil
+		}
+		m.AddMessage("keybindings.json created successfully.")
+		return m, nil
+	}
+
+	m.AddMessage("Error checking keybindings.json: " + err.Error())
+	return m, nil
+}
+
+// CheckUVStatus checks the UV installation status.
 func CheckUVStatus(installer services.UVInstallerInterface) tea.Cmd {
 	return func() tea.Msg {
 		installed, version, err := installer.IsInstalled()
@@ -23,7 +48,7 @@ func CheckUVStatus(installer services.UVInstallerInterface) tea.Cmd {
 	}
 }
 
-// InstallUV installs UV
+// InstallUV installs UV.
 func InstallUV(installer services.UVInstallerInterface) tea.Cmd {
 	return func() tea.Msg {
 		err := installer.Install()
@@ -31,7 +56,7 @@ func InstallUV(installer services.UVInstallerInterface) tea.Cmd {
 	}
 }
 
-// LoadPythonVersions loads Python version information
+// LoadPythonVersions loads Python version information.
 func LoadPythonVersions(manager services.PythonManagerInterface) tea.Cmd {
 	return func() tea.Msg {
 		available, err := manager.ListAvailable()
@@ -51,7 +76,7 @@ func LoadPythonVersions(manager services.PythonManagerInterface) tea.Cmd {
 	}
 }
 
-// InstallPythonVersion installs a Python version
+// InstallPythonVersion installs a Python version.
 func InstallPythonVersion(manager services.PythonManagerInterface, version string) tea.Cmd {
 	return func() tea.Msg {
 		err := manager.Install(version)
@@ -64,7 +89,7 @@ func InstallPythonVersion(manager services.PythonManagerInterface, version strin
 	}
 }
 
-// UninstallPythonVersion uninstalls a Python version
+// UninstallPythonVersion uninstalls a Python version.
 func UninstallPythonVersion(manager services.PythonManagerInterface, version string) tea.Cmd {
 	return func() tea.Msg {
 		err := manager.Uninstall(version)
@@ -77,7 +102,7 @@ func UninstallPythonVersion(manager services.PythonManagerInterface, version str
 	}
 }
 
-// PinPythonVersion pins a Python version
+// PinPythonVersion pins a Python version.
 func PinPythonVersion(manager services.PythonManagerInterface, version string) tea.Cmd {
 	return func() tea.Msg {
 		err := manager.Pin(version)

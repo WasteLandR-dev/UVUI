@@ -1,14 +1,15 @@
+// Package services provides services for the application.
 package services
 
 import "uvui/internal/types"
 
-// CommandExecutorInterface defines the contract for command execution
+// CommandExecutorInterface defines the contract for command execution.
 type CommandExecutorInterface interface {
 	Execute(command string, args ...string) ([]byte, error)
 	IsUVAvailable() bool
 }
 
-// PythonManagerInterface defines the contract for Python version management
+// PythonManagerInterface defines the contract for Python version management.
 type PythonManagerInterface interface {
 	ListAvailable() ([]types.PythonVersion, error)
 	ListInstalled() ([]types.PythonVersion, error)
@@ -18,7 +19,17 @@ type PythonManagerInterface interface {
 	Find(version string) (*types.PythonVersion, error)
 }
 
-// UVInstallerInterface defines the contract for UV installation
+// ProjectManagerInterface defines the contract for project management.
+type ProjectManagerInterface interface {
+	GetProjectStatus() (*types.ProjectStatus, error)
+	InitProject(name string, options types.InitOptions) (string, error)
+	SyncProject() error
+	LockProject() error
+	GetDependencyTree() (*types.DependencyTree, error)
+	GetProjectDependencies() ([]types.ProjectDependency, error)
+}
+
+// UVInstallerInterface defines the contract for UV installation.
 type UVInstallerInterface interface {
 	IsInstalled() (bool, string, error)
 	Install() error

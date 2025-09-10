@@ -1,12 +1,13 @@
-package utils
+// Package version provides utility functions.
+package version
 
 import (
 	"strconv"
 	"strings"
 )
 
-// CompareVersions compares two version strings
-// Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if v1 == v2
+// CompareVersions compares two version strings.
+// It returns: 1 if v1 > v2, -1 if v1 < v2, 0 if v1 == v2.
 func CompareVersions(v1, v2 string) int {
 	parts1 := strings.Split(v1, ".")
 	parts2 := strings.Split(v2, ".")
@@ -36,12 +37,12 @@ func CompareVersions(v1, v2 string) int {
 	return 0
 }
 
-// IsNewerVersion checks if v1 is newer than v2
+// IsNewerVersion checks if v1 is newer than v2.
 func IsNewerVersion(v1, v2 string) bool {
 	return CompareVersions(v1, v2) > 0
 }
 
-// IsSameVersion checks if two versions are the same
+// IsSameVersion checks if two versions are the same.
 func IsSameVersion(v1, v2 string) bool {
 	return CompareVersions(v1, v2) == 0
 }

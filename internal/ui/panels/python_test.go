@@ -2,14 +2,13 @@ package panels
 
 import (
 	"testing"
+	"uvui/internal/types"
 
 	"github.com/stretchr/testify/assert"
-
-	"uvui/internal/types"
 )
 
 func TestRenderPythonPanel_UVNotInstalled(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: false},
 	}
 
@@ -20,9 +19,9 @@ func TestRenderPythonPanel_UVNotInstalled(t *testing.T) {
 }
 
 func TestRenderPythonPanel_Loading(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Loading: true,
 		},
 	}
@@ -34,9 +33,9 @@ func TestRenderPythonPanel_Loading(t *testing.T) {
 }
 
 func TestRenderPythonPanel_NoVersions(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{},
 			Installed: []types.PythonVersion{},
 		},
@@ -50,9 +49,9 @@ func TestRenderPythonPanel_NoVersions(t *testing.T) {
 }
 
 func TestRenderPythonPanel_WithVersions(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{
 				{Version: "3.12.0", Installed: false},
 				{Version: "3.11.0", Installed: false},
@@ -71,13 +70,12 @@ func TestRenderPythonPanel_WithVersions(t *testing.T) {
 	assert.Contains(t, content, "3.12.0")
 	assert.Contains(t, content, "3.11.0")
 	assert.Contains(t, content, "(current)")
-	assert.Contains(t, content, "(current)")
 }
 
 func TestRenderPythonPanel_OperationInProgress(t *testing.T) {
-	state := &types.AppState{
+	state := &AppState{
 		UVStatus: types.UVStatus{Installed: true},
-		PythonVersions: types.PythonVersions{
+		PythonVersions: PythonVersions{
 			Available: []types.PythonVersion{
 				{Version: "3.12.0", Installed: false},
 			},
@@ -102,7 +100,7 @@ func TestRenderVersionLine_Selected(t *testing.T) {
 		Current:   false,
 	}
 
-	line := renderVersionLine(version, true)
+	line := renderVersionLine(version, true, "3.12.0")
 
 	assert.Contains(t, line, "> ")
 	assert.Contains(t, line, "3.12.0")
@@ -115,7 +113,7 @@ func TestRenderVersionLine_NotSelected(t *testing.T) {
 		Current:   false,
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "  ")
 	assert.Contains(t, line, "3.12.0")
@@ -129,7 +127,7 @@ func TestRenderVersionLine_Current(t *testing.T) {
 		Path:      "/usr/local/bin/python3.11",
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "3.11.0")
 	assert.Contains(t, line, "(current)")
@@ -144,7 +142,7 @@ func TestRenderVersionLine_Installed(t *testing.T) {
 		Path:      "/usr/local/bin/python3.10",
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "3.10.0")
 	assert.Contains(t, line, "✓")
@@ -238,7 +236,7 @@ func TestGetPythonPanelHelp(t *testing.T) {
 
 	assert.Contains(t, help, "↑↓: Navigate")
 	assert.Contains(t, help, "Enter: Install")
-	assert.Contains(t, help, "d: Delete")
+	assert.Contains(t, help, "d/Del: Delete")
 	assert.Contains(t, help, "p: Pin")
 	assert.Contains(t, help, "i: Refresh")
 }
