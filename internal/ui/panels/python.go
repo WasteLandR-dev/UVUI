@@ -3,6 +3,7 @@ package panels
 
 import (
 	"fmt"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -51,8 +52,9 @@ func RenderPythonPanel(state *AppState) string {
 	content.WriteString(fmt.Sprintf("Python Versions (%d available):\n\n", len(allVersions)))
 
 	// Render version list
+	pinnedVersion := getPinnedVersion()
 	for i, version := range allVersions {
-		line := renderVersionLine(version, i == state.PythonVersions.Selected)
+		line := renderVersionLine(version, i == state.PythonVersions.Selected, pinnedVersion)
 		content.WriteString(line + "\n")
 	}
 
@@ -75,7 +77,7 @@ func RenderPythonPanel(state *AppState) string {
 }
 
 // renderVersionLine renders a single Python version line.
-func renderVersionLine(version types.PythonVersion, selected bool) string {
+func renderVersionLine(version types.PythonVersion, selected bool, pinnedVersion string) string {
 	var line strings.Builder
 
 	// Selection indicator
@@ -87,7 +89,9 @@ func renderVersionLine(version types.PythonVersion, selected bool) string {
 
 	// Version number with status styling
 	versionText := version.Version
-	if version.Current {
+	if version.Version == pinnedVersion {
+		versionText = ui.PinnedVersionStyle.Render(versionText + " (pinned)")
+	} else if version.Current {
 		versionText = ui.CurrentVersionStyle.Render(versionText + " (current)")
 	} else if version.Installed {
 		versionText = ui.InstalledVersionStyle.Render(versionText + " ✓")
@@ -184,4 +188,13 @@ func parseVersionPart(part string) int {
 // GetPythonPanelHelp returns help text for the Python panel.
 func GetPythonPanelHelp() string {
 	return "↑↓: Navigate | Enter: Install | d/Del: Delete | p: Pin | i: Refresh"
+}
+
+// getPinnedVersion reads the pinned Python version from the .python-version file.
+func getPinnedVersion() string {
+	content, err := os.ReadFile(".python-version")
+	if err != nil {
+		return "3.12"
+	}
+	return strings.TrimSpace(string(content))
 }

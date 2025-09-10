@@ -100,7 +100,7 @@ func TestRenderVersionLine_Selected(t *testing.T) {
 		Current:   false,
 	}
 
-	line := renderVersionLine(version, true)
+	line := renderVersionLine(version, true, "3.12.0")
 
 	assert.Contains(t, line, "> ")
 	assert.Contains(t, line, "3.12.0")
@@ -113,7 +113,7 @@ func TestRenderVersionLine_NotSelected(t *testing.T) {
 		Current:   false,
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "  ")
 	assert.Contains(t, line, "3.12.0")
@@ -127,7 +127,7 @@ func TestRenderVersionLine_Current(t *testing.T) {
 		Path:      "/usr/local/bin/python3.11",
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "3.11.0")
 	assert.Contains(t, line, "(current)")
@@ -142,7 +142,7 @@ func TestRenderVersionLine_Installed(t *testing.T) {
 		Path:      "/usr/local/bin/python3.10",
 	}
 
-	line := renderVersionLine(version, false)
+	line := renderVersionLine(version, false, "3.12.0")
 
 	assert.Contains(t, line, "3.10.0")
 	assert.Contains(t, line, "✓")

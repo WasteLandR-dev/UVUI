@@ -87,6 +87,11 @@ var (
 				Bold(true).
 				Foreground(lipgloss.Color(AccentColor))
 
+	// PinnedVersionStyle defines the style for the pinned Python version.
+	PinnedVersionStyle = lipgloss.NewStyle().
+				Bold(true).
+				Foreground(lipgloss.Color(PrimaryColor))
+
 	// LoadingStyle defines the style for loading indicators.
 	LoadingStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color(WarningColor))
