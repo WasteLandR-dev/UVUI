@@ -21,13 +21,12 @@ type Model struct {
 }
 
 // NewModel creates a new application model.
-func NewModel() *Model {
+func NewModel(uvInstaller services.UVInstallerInterface, pythonManager services.PythonManagerInterface, projectManager services.ProjectManagerInterface, commandExecutor services.CommandExecutorInterface) *Model {
 	config, err := LoadConfig()
 	if err != nil {
 		panic(err)
 	}
 
-	executor := services.NewCommandExecutor()
 	ti := textinput.New()
 	ti.Placeholder = "Project Name"
 	ti.Focus()
@@ -60,10 +59,10 @@ func NewModel() *Model {
 	m := &Model{
 		State:           state,
 		Config:          config,
-		UVInstaller:     services.NewUVInstaller(executor),
-		PythonManager:   services.NewPythonManager(executor),
-		ProjectManager:  services.NewProjectManager(executor),
-		CommandExecutor: executor,
+		UVInstaller:     uvInstaller,
+		PythonManager:   pythonManager,
+		ProjectManager:  projectManager,
+		CommandExecutor: commandExecutor,
 		TextInput:       ti,
 		InputMode:       InputModeNone,
 	}

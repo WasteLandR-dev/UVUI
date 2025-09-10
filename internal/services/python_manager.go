@@ -29,8 +29,7 @@ func (p *PythonManager) ListAvailable() ([]types.PythonVersion, error) {
 
 	output, err := p.executor.Execute("uv", "python", "list", "--only-downloads")
 	if err != nil {
-		// Return mock data for demo purposes
-		return p.getMockAvailableVersions(), nil
+		return nil, err
 	}
 
 	return p.parseAvailableVersions(string(output)), nil
@@ -44,8 +43,7 @@ func (p *PythonManager) ListInstalled() ([]types.PythonVersion, error) {
 
 	output, err := p.executor.Execute("uv", "python", "list", "--only-installed")
 	if err != nil {
-		// Return mock data for demo purposes
-		return p.getMockInstalledVersions(), nil
+		return nil, err
 	}
 
 	return p.parseInstalledVersions(string(output)), nil
@@ -143,11 +141,15 @@ func (p *PythonManager) parseInstalledVersions(output string) []types.PythonVers
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
 			ver := versionRegex.FindString(parts[0])
+			path := strings.Join(parts[1:], " ")
+			if after, ok := strings.CutPrefix(path, "* "); ok {
+				path = after
+			}
 			versions = append(versions, types.PythonVersion{
 				Version:   ver,
 				Installed: true,
 				Current:   strings.Contains(line, "*") || strings.Contains(line, "default"),
-				Path:      strings.Join(parts[1:], " "),
+				Path:      path,
 			})
 		}
 	}
@@ -176,24 +178,24 @@ func (p *PythonManager) parseFindResult(output string) *types.PythonVersion {
 }
 
 // getMockAvailableVersions returns mock data for available versions.
-func (p *PythonManager) getMockAvailableVersions() []types.PythonVersion {
-	return []types.PythonVersion{
-		{Version: "3.12.1", Installed: false},
-		{Version: "3.12.0", Installed: false},
-		{Version: "3.11.7", Installed: false},
-		{Version: "3.11.6", Installed: false},
-		{Version: "3.10.13", Installed: false},
-		{Version: "3.10.12", Installed: false},
-		{Version: "3.9.18", Installed: false},
-		{Version: "3.9.17", Installed: false},
-		{Version: "3.8.18", Installed: false},
-	}
-}
+// func (p *PythonManager) getMockAvailableVersions() []types.PythonVersion {
+// 	return []types.PythonVersion{
+// 		{Version: "3.12.1", Installed: false},
+// 		{Version: "3.12.0", Installed: false},
+// 		{Version: "3.11.7", Installed: false},
+// 		{Version: "3.11.6", Installed: false},
+// 		{Version: "3.10.13", Installed: false},
+// 		{Version: "3.10.12", Installed: false},
+// 		{Version: "3.9.18", Installed: false},
+// 		{Version: "3.9.17", Installed: false},
+// 		{Version: "3.8.18", Installed: false},
+// 	}
+// }
 
-// getMockInstalledVersions returns mock data for installed versions.
-func (p *PythonManager) getMockInstalledVersions() []types.PythonVersion {
-	return []types.PythonVersion{
-		{Version: "3.11.6", Installed: true, Current: true, Path: "/usr/local/bin/python3.11"},
-		{Version: "3.10.12", Installed: true, Current: false, Path: "/usr/local/bin/python3.10"},
-	}
-}
+// // getMockInstalledVersions returns mock data for installed versions.
+// func (p *PythonManager) getMockInstalledVersions() []types.PythonVersion {
+// 	return []types.PythonVersion{
+// 		{Version: "3.11.6", Installed: true, Current: true, Path: "/usr/local/bin/python3.11"},
+// 		{Version: "3.10.12", Installed: true, Current: false, Path: "/usr/local/bin/python3.10"},
+// 	}
+// }

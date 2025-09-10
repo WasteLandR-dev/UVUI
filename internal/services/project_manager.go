@@ -134,8 +134,7 @@ func (p *ProjectManager) GetDependencyTree() (*types.DependencyTree, error) {
 
 	output, err := p.executor.Execute("uv", "tree")
 	if err != nil {
-		// Return mock data for demo purposes
-		return p.getMockDependencyTree(), nil
+		return nil, err
 	}
 
 	return p.parseDependencyTree(string(output)), nil
@@ -183,7 +182,7 @@ func (p *ProjectManager) parseDependencyTree(output string) *types.DependencyTre
 		}
 
 		// Extract package name and version
-		parts := strings.Fields(trimmed)
+		parts := strings.Split(trimmed, "==")
 		if len(parts) > 0 {
 			node := types.TreeNode{
 				Name:  parts[0],
@@ -200,21 +199,21 @@ func (p *ProjectManager) parseDependencyTree(output string) *types.DependencyTre
 }
 
 // getMockDependencyTree returns mock dependency tree for demo.
-func (p *ProjectManager) getMockDependencyTree() *types.DependencyTree {
-	return &types.DependencyTree{
-		Dependencies: []types.TreeNode{
-			{Name: "requests", Version: "2.31.0", Level: 0},
-			{Name: "urllib3", Version: "2.0.4", Level: 1},
-			{Name: "certifi", Version: "2023.7.22", Level: 1},
-			{Name: "charset-normalizer", Version: "3.2.0", Level: 1},
-			{Name: "idna", Version: "3.4", Level: 1},
-			{Name: "fastapi", Version: "0.104.1", Level: 0},
-			{Name: "starlette", Version: "0.27.0", Level: 1},
-			{Name: "pydantic", Version: "2.4.2", Level: 1},
-			{Name: "typing-extensions", Version: "4.8.0", Level: 2},
-		},
-	}
-}
+// func (p *ProjectManager) getMockDependencyTree() *types.DependencyTree {
+// 	return &types.DependencyTree{
+// 		Dependencies: []types.TreeNode{
+// 			{Name: "requests", Version: "2.31.0", Level: 0},
+// 			{Name: "urllib3", Version: "2.0.4", Level: 1},
+// 			{Name: "certifi", Version: "2023.7.22", Level: 1},
+// 			{Name: "charset-normalizer", Version: "3.2.0", Level: 1},
+// 			{Name: "idna", Version: "3.4", Level: 1},
+// 			{Name: "fastapi", Version: "0.104.1", Level: 0},
+// 			{Name: "starlette", Version: "0.27.0", Level: 1},
+// 			{Name: "pydantic", Version: "2.4.2", Level: 1},
+// 			{Name: "typing-extensions", Version: "4.8.0", Level: 2},
+// 		},
+// 	}
+// }
 
 // getMockDependencies returns mock dependencies for demo.
 func (p *ProjectManager) getMockDependencies() []types.ProjectDependency {
